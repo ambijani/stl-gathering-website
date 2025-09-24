@@ -1,36 +1,64 @@
+import { NextRequest } from "next/server";
 import connect from "@/lib/mongo";
 import Gathering from "@/models/Gathering";
 
-// PATCH to update one Varo's basic fields (optional; used if you add edit UI)
-export async function PATCH(req: Request, { params }: { params: { id: string, varoId: string } }) {
+// Infer the element type of the varos array from the Mongoose model
+type VaroDoc = NonNullable<(typeof Gathering)["prototype"]["varos"]>[number];
+
+// PATCH: update selected fields on one varo
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string; varoId: string }> }
+) {
+  const { id, varoId } = await context.params;
   await connect();
-  const g = await Gathering.findById(params.id);
-  if (!g) return new Response("Not found", { status: 404 });
 
-  const v = g.varos.id(params.varoId);
-  if (!v) return new Response("Varo not found", { status: 404 });
+  const g = await Gathering.findById(id);
+  if (!g) return new Response("Gathering not found", { status: 404 });
 
-  const data = await req.json();
-  if (data.title !== undefined) v.title = data.title;
-  if (data.description !== undefined) v.description = data.description;
-  if (data.location !== undefined) v.location = data.location;
-  if (data.capacity !== undefined) v.capacity = data.capacity;
-  if (data.startTime !== undefined) v.startTime = data.startTime ? new Date(data.startTime) : undefined;
-  if (data.endTime !== undefined) v.endTime = data.endTime ? new Date(data.endTime) : undefined;
-  if (Array.isArray(data.tags)) v.tags = data.tags;
+  const varo = g.varos.id(varoId) as VaroDoc | null;
+  if (!varo) return new Response("Varo not found", { status: 404 });
+
+  const body = (await request.json()) as Partial<{
+    title: string;
+    description?: string;
+    location?: string;
+    capacity?: number | null;
+    startTime?: string | Date | null;
+    endTime?: string | Date | null;
+    tags?: string[];
+  }>;
+
+  if (body.title !== undefined) varo.title = body.title;
+  if (body.description !== undefined) varo.description = body.description ?? undefined;
+  if (body.location !== undefined) varo.location = body.location ?? undefined;
+  if (body.capacity !== undefined) varo.capacity = body.capacity ?? undefined;
+  if (body.startTime !== undefined)
+    varo.startTime = body.startTime ? new Date(body.startTime) : undefined;
+  if (body.endTime !== undefined)
+    varo.endTime = body.endTime ? new Date(body.endTime) : undefined;
+  if (Array.isArray(body.tags)) varo.tags = body.tags;
 
   await g.save();
-  return Response.json({ ok: true });
+  return Response.json(varo);
 }
 
-// DELETE a varo
-export async function DELETE(_req: Request, { params }: { params: { id: string, varoId: string } }) {
+// DELETE: remove one varo
+export async function DELETE(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string; varoId: string }> }
+) {
+  const { id, varoId } = await context.params;
   await connect();
-  const g = await Gathering.findById(params.id);
-  if (!g) return new Response("Not found", { status: 404 });
-  const v = g.varos.id(params.varoId);
-  if (!v) return new Response("Varo not found", { status: 404 });
-  v.deleteOne();
+
+  const g = await Gathering.findById(id);
+  if (!g) return new Response("Gathering not found", { status: 404 });
+
+  const varo = g.varos.id(varoId) as VaroDoc | null;
+  if (!varo) return new Response("Varo not found", { status: 404 });
+
+  varo.deleteOne();
   await g.save();
+
   return Response.json({ ok: true });
 }

@@ -5,25 +5,38 @@ import {
   BarChart, Bar, Legend, ResponsiveContainer
 } from "recharts";
 
-type SignupsByInterest = { interest: string|null; count: number };
+type SignupByInterest = { interest: string | null; count: number };
 type PairsByDate = { date: string; pairs: number };
 type VaroFill = { date: string; capacity: number; assigned: number };
 
+type OverviewRes = {
+  signupsByInterest: SignupByInterest[];
+  pairsByDate: PairsByDate[];
+  varoFill: VaroFill[];
+};
+
 export default function Analytics() {
   const [loading, setLoading] = useState(true);
-  const [signupsByInterest, setSBI] = useState<SignupsByInterest[]>([]);
+  const [signupsByInterest, setSBI] = useState<SignupByInterest[]>([]);
   const [pairsByDate, setPBD] = useState<PairsByDate[]>([]);
   const [varoFill, setVF] = useState<VaroFill[]>([]);
 
   useEffect(() => {
     (async () => {
       const res = await fetch("/api/admin/metrics/overview");
-      const data = await res.json();
-      setSBI(data.signupsByInterest || []);
-      setPBD((data.pairsByDate || []).map((d: any) => ({
-        date: d.date, pairs: d.pairs
+      const data: OverviewRes = await res.json();
+
+      setSBI(data.signupsByInterest ?? []);
+      setPBD((data.pairsByDate ?? []).map((d) => ({
+        date: String(d.date),
+        pairs: Number(d.pairs ?? 0),
       })));
-      setVF((data.varoFill || []).map((d:any) => ({ date: d.date, capacity: d.capacity, assigned: d.assigned })));
+      setVF((data.varoFill ?? []).map((d) => ({
+        date: String(d.date),
+        capacity: Number(d.capacity ?? 0),
+        assigned: Number(d.assigned ?? 0),
+      })));
+
       setLoading(false);
     })();
   }, []);
@@ -38,9 +51,9 @@ export default function Analytics() {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={pairsByDate}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tickFormatter={(v)=>new Date(v).toLocaleDateString()} />
+              <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
               <YAxis />
-              <Tooltip labelFormatter={(v)=>new Date(v as string).toLocaleDateString()} />
+              <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString()} />
               <Line type="monotone" dataKey="pairs" />
             </LineChart>
           </ResponsiveContainer>
@@ -68,9 +81,9 @@ export default function Analytics() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={varoFill}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tickFormatter={(v)=>new Date(v).toLocaleDateString()} />
+              <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
               <YAxis />
-              <Tooltip labelFormatter={(v)=>new Date(v as string).toLocaleDateString()} />
+              <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString()} />
               <Legend />
               <Bar dataKey="assigned" />
               <Bar dataKey="capacity" />
