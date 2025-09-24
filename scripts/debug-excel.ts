@@ -1,4 +1,3 @@
-// scripts/debug-excel.ts
 import * as path from "node:path";
 import xlsx from "xlsx";
 
@@ -6,18 +5,12 @@ type Cell = string | number | Date | boolean | null;
 type Row = Cell[];
 
 function sheetToRowsArray(sheet: xlsx.WorkSheet): Row[] {
-  return xlsx.utils.sheet_to_json<Row>(sheet, {
-    header: 1,
-    raw: true,
-    defval: "",
-  }) as Row[];
+  return xlsx.utils.sheet_to_json<Row>(sheet, { header: 1, raw: true, defval: "" }) as Row[];
 }
 
 function show(name: string, rows: Row[]) {
   console.log(`\n=== ${name} (first 10 rows) ===`);
-  for (let i = 0; i < Math.min(10, rows.length); i++) {
-    console.log(`[${i}]`, rows[i]);
-  }
+  for (let i = 0; i < Math.min(10, rows.length); i++) console.log(`[${i}]`, rows[i]);
 }
 
 (async () => {

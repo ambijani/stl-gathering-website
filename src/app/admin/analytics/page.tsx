@@ -1,19 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import {
-  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
-  BarChart, Bar, Legend, ResponsiveContainer
-} from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Legend, ResponsiveContainer } from "recharts";
 
 type SignupByInterest = { interest: string | null; count: number };
 type PairsByDate = { date: string; pairs: number };
 type VaroFill = { date: string; capacity: number; assigned: number };
-
-type OverviewRes = {
-  signupsByInterest: SignupByInterest[];
-  pairsByDate: PairsByDate[];
-  varoFill: VaroFill[];
-};
+type OverviewRes = { signupsByInterest: SignupByInterest[]; pairsByDate: PairsByDate[]; varoFill: VaroFill[]; };
 
 export default function Analytics() {
   const [loading, setLoading] = useState(true);
@@ -25,18 +17,9 @@ export default function Analytics() {
     (async () => {
       const res = await fetch("/api/admin/metrics/overview");
       const data: OverviewRes = await res.json();
-
       setSBI(data.signupsByInterest ?? []);
-      setPBD((data.pairsByDate ?? []).map((d) => ({
-        date: String(d.date),
-        pairs: Number(d.pairs ?? 0),
-      })));
-      setVF((data.varoFill ?? []).map((d) => ({
-        date: String(d.date),
-        capacity: Number(d.capacity ?? 0),
-        assigned: Number(d.assigned ?? 0),
-      })));
-
+      setPBD((data.pairsByDate ?? []).map((d) => ({ date: String(d.date), pairs: Number(d.pairs ?? 0) })));
+      setVF((data.varoFill ?? []).map((d) => ({ date: String(d.date), capacity: Number(d.capacity ?? 0), assigned: Number(d.assigned ?? 0) })));
       setLoading(false);
     })();
   }, []);

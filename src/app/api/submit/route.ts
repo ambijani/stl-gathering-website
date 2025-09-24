@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import connect from "@/lib/mongo";
 import Person from "@/models/Person";
 
