@@ -7,12 +7,16 @@ import connect from "@/lib/mongo";
 import Gathering from "@/models/Gathering";
 
 type VaroDoc = NonNullable<(typeof Gathering)["prototype"]["varos"]>[number];
+type GatheringWithVaros = {
+  varos?: VaroDoc[];
+  [key: string]: unknown;
+};
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await context.params;
   await connect();
-  const g = await Gathering.findById(id).lean() as any;
+  const g = await Gathering.findById(id).lean() as GatheringWithVaros | null;
   if (!g) return new Response("Not found", { status: 404 });
   return Response.json(g.varos ?? []);
 }
@@ -42,6 +46,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   g.varos.push(newVaro);
   await g.save();
 
-  const saved = await Gathering.findById(id).lean() as any;
+  const saved = await Gathering.findById(id).lean() as GatheringWithVaros | null;
   return Response.json(saved?.varos ?? []);
 }

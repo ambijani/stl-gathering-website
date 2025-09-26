@@ -25,7 +25,7 @@ export default function Signup() {
       <div className="ismaili-card p-8 text-center max-w-md mx-4">
         <div className="text-6xl mb-4">✨</div>
         <h2 className="text-2xl font-bold ismaili-text-primary mb-2">Thank You!</h2>
-        <p className="text-gray-600">We've received your information and will be in touch soon.</p>
+        <p className="text-gray-600">We&apos;ve received your information and will be in touch soon.</p>
       </div>
     </div>
   );
