@@ -1,36 +1,24 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+import { requireAdmin } from "@/app/api/_auth";
 
 import { NextRequest } from "next/server";
 import connect from "@/lib/mongo";
 import Gathering from "@/models/Gathering";
 
-type VaroLean = {
-  _id?: string;
-  title: string;
-  description?: string;
-  location?: string;
-  capacity?: number;
-  startTime?: Date;
-  endTime?: Date;
-  tags: string[];
-  assignedPeople: string[];
-};
-
-type GatheringLean = {
-  _id: string;
-  varos?: VaroLean[];
-};
+type VaroDoc = NonNullable<(typeof Gathering)["prototype"]["varos"]>[number];
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const { id } = await context.params;
   await connect();
-  const g = await Gathering.findById(id).lean<GatheringLean | null>();
+  const g = await Gathering.findById(id).lean() as any;
   if (!g) return new Response("Not found", { status: 404 });
   return Response.json(g.varos ?? []);
 }
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
   const { id } = await context.params;
   await connect();
 
@@ -40,7 +28,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const g = await Gathering.findById(id);
   if (!g) return new Response("Not found", { status: 404 });
 
-  const newVaro: VaroLean = {
+  const newVaro = {
     title: body.title.trim(),
     description: body.description,
     location: body.location,
@@ -49,11 +37,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     endTime: body.endTime ? new Date(body.endTime) : undefined,
     tags: Array.isArray(body.tags) ? body.tags : [],
     assignedPeople: []
-  };
+  } as unknown as VaroDoc;
 
   g.varos.push(newVaro);
   await g.save();
 
-  const saved = await Gathering.findById(id).select('varos').lean<GatheringLean | null>();
+  const saved = await Gathering.findById(id).lean() as any;
   return Response.json(saved?.varos ?? []);
 }

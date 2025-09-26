@@ -1,11 +1,13 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+import { requireAdmin } from "@/app/api/_auth";
 
 import { NextRequest } from "next/server";
 import connect from "@/lib/mongo";
 import Gathering from "@/models/Gathering";
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string; varoId: string }> }) {
+  await requireAdmin();
   const { id, varoId } = await context.params;
   await connect();
 

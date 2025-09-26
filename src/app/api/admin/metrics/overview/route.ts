@@ -1,11 +1,13 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+import { requireAdmin } from "@/app/api/_auth";
 
 import connect from "@/lib/mongo";
 import Person from "@/models/Person";
 import Gathering from "@/models/Gathering";
 
 export async function GET() {
+  await requireAdmin();
   await connect();
 
   const signupsByInterest = await Person.aggregate([
