@@ -7,6 +7,7 @@ import Person from "@/models/Person";
 export async function POST(req: Request) {
   await connect();
   const body = await req.json();
+  console.log(body);
   if (!body.name) return new Response("Missing name", { status: 400 });
   const doc = await Person.create(body);
   return Response.json({ ok: true, id: doc._id });
