@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react";
 
 export default function Home() {
   redirect("/signup");
   return (
-    <>
-      <Analytics />
-    </>
+    <html lang="en">
+      <body>
+        <Analytics />
+      </body>
+    </html>
   );
 }

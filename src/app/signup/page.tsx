@@ -20,17 +20,89 @@ export default function Signup() {
     setOk(res.ok);
   }
 
-  if (ok) return <div className="p-6">Thanks! We got your info.</div>;
+  if (ok) return (
+    <div className="min-h-screen ismaili-bg-pattern flex items-center justify-center">
+      <div className="ismaili-card p-8 text-center max-w-md mx-4">
+        <div className="text-6xl mb-4">✨</div>
+        <h2 className="text-2xl font-bold ismaili-text-primary mb-2">Thank You!</h2>
+        <p className="text-gray-600">We've received your information and will be in touch soon.</p>
+      </div>
+    </div>
+  );
 
   return (
-    <form onSubmit={onSubmit} className="max-w-lg mx-auto p-6 space-y-3">
-      <h1 className="text-2xl font-semibold">Sign up</h1>
-      <input className="border p-2 w-full rounded" name="name" placeholder="Name" required onChange={update} />
-      <input className="border p-2 w-full rounded" name="email" placeholder="Email" onChange={update} />
-      <input className="border p-2 w-full rounded" name="phone" placeholder="Phone" onChange={update} />
-      <input className="border p-2 w-full rounded" name="interests" placeholder="Interests (comma-separated)" onChange={update} />
-      <textarea className="border p-2 w-full rounded" name="availability" placeholder="Availability / Notes" onChange={update} />
-      <button className="px-4 py-2 rounded bg-black text-white">Submit</button>
-    </form>
+    <div className="min-h-screen ismaili-bg-pattern">
+      <div className="ismaili-header">
+        <div className="container mx-auto px-4">
+          <h1 className="text-4xl font-bold mb-2">Join Our Community</h1>
+          <p className="text-lg opacity-90">Sign up for STL Ismaili gatherings and events</p>
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-lg mx-auto">
+          <div className="ismaili-card p-8">
+            <form onSubmit={onSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium ismaili-text-primary mb-2">Full Name *</label>
+                <input 
+                  className="ismaili-input w-full" 
+                  name="name" 
+                  placeholder="Enter your full name" 
+                  required 
+                  onChange={update} 
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium ismaili-text-primary mb-2">Email</label>
+                <input 
+                  className="ismaili-input w-full" 
+                  name="email" 
+                  type="email"
+                  placeholder="your.email@example.com" 
+                  onChange={update} 
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium ismaili-text-primary mb-2">Phone</label>
+                <input 
+                  className="ismaili-input w-full" 
+                  name="phone" 
+                  type="tel"
+                  placeholder="(314) 555-0123" 
+                  onChange={update} 
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium ismaili-text-primary mb-2">Interests</label>
+                <input 
+                  className="ismaili-input w-full" 
+                  name="interests" 
+                  placeholder="Community service, sports, arts, etc. (comma-separated)" 
+                  onChange={update} 
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium ismaili-text-primary mb-2">Availability & Notes</label>
+                <textarea 
+                  className="ismaili-input w-full h-24 resize-none" 
+                  name="availability" 
+                  placeholder="Tell us about your availability and any additional notes..." 
+                  onChange={update} 
+                />
+              </div>
+              
+              <button className="ismaili-button w-full text-lg py-3">
+                Join Our Community
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

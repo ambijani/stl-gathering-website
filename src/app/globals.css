@@ -1,30 +1,46 @@
 @import "tailwindcss";
 
 :root {
-  /* Light theme: high contrast, gentle background */
-  --background: #f6f7f9; /* near-white with a hint of blue */
-  --foreground: #0a0a0a; /* almost black for AAA on light */
+  /* Ismaili theme colors inspired by the.ismaili */
+  --ismaili-green: #2d5016; /* Deep forest green */
+  --ismaili-gold: #d4af37; /* Traditional gold */
+  --ismaili-light-green: #4a7c59; /* Lighter green for accents */
+  --ismaili-cream: #fafafa; /* Clean white background */
+  --ismaili-light-gray: #f5f5f5; /* Light gray for subtle backgrounds */
+  --ismaili-dark: #333333; /* Professional dark gray for text */
+  --ismaili-white: #ffffff;
+  --ismaili-border: #e5e5e5; /* Subtle border color */
+  
+  /* Light theme: Clean and professional like the.ismaili */
+  --background: var(--ismaili-white);
+  --foreground: var(--ismaili-dark);
+  --primary: var(--ismaili-green);
+  --secondary: var(--ismaili-gold);
+  --accent: var(--ismaili-light-green);
+  --surface: var(--ismaili-light-gray);
+  --border: var(--ismaili-border);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Dark theme: deep neutral with soft foreground */
-    --background: #0b0c0d;
-    --foreground: #e6e6e6;
-  }
-}
+/* Force light theme - no dark mode for now */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
 }
 
 /* Accessibility and baseline tweaks */
@@ -32,8 +48,107 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 html {
-  color-scheme: light dark;
+  color-scheme: light only;
 }
 a {
   text-underline-offset: 2px;
+  color: var(--primary);
+  transition: color 0.2s ease;
+}
+a:hover {
+  color: var(--secondary);
+}
+
+/* Ismaili-themed utility classes */
+.ismaili-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+}
+
+.ismaili-header-gradient {
+  background: linear-gradient(135deg, #2d5016 0%, #4a7c59 100%);
+}
+
+.ismaili-gold-gradient {
+  background: linear-gradient(135deg, var(--secondary) 0%, #f4d03f 100%);
+}
+
+.ismaili-card {
+  background: var(--ismaili-white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.ismaili-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.ismaili-button {
+  background: var(--primary);
+  color: var(--ismaili-white);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.ismaili-button:hover {
+  background: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(45, 80, 22, 0.2);
+}
+
+.ismaili-button-secondary {
+  background: var(--secondary);
+  color: var(--ismaili-dark);
+}
+
+.ismaili-button-secondary:hover {
+  background: #f4d03f;
+}
+
+.ismaili-input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  background: var(--ismaili-white);
+  color: var(--ismaili-dark);
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.ismaili-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(45, 80, 22, 0.1);
+}
+
+.ismaili-header {
+  background: linear-gradient(135deg, #2d5016 0%, #4a7c59 100%);
+  color: #ffffff;
+  padding: 3rem 0;
+  text-align: center;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.ismaili-text-primary {
+  color: var(--primary);
+}
+
+.ismaili-text-secondary {
+  color: var(--secondary);
+}
+
+.ismaili-bg-pattern {
+  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+  min-height: 100vh;
+}
+
+.ismaili-bg-subtle {
+  background: var(--surface);
 }

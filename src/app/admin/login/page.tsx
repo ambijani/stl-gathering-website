@@ -12,10 +12,31 @@ export default function AdminLogin() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-sm mx-auto p-6 space-y-4">
-      <h1 className="text-xl font-semibold">Admin Login</h1>
-      <input className="w-full border p-2 rounded" type="password" placeholder="Admin password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      <button className="px-4 py-2 rounded bg-black text-white">Sign in</button>
-    </form>
+    <div className="min-h-screen ismaili-bg-pattern flex items-center justify-center">
+      <div className="ismaili-card p-8 max-w-md mx-4 w-full">
+        <div className="text-center mb-6">
+          <div className="text-4xl mb-4">🔐</div>
+          <h1 className="text-2xl font-bold ismaili-text-primary">Admin Access</h1>
+          <p className="text-gray-600 mt-2">Enter your admin password to continue</p>
+        </div>
+        
+        <form onSubmit={onSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium ismaili-text-primary mb-2">Password</label>
+            <input 
+              className="ismaili-input w-full" 
+              type="password" 
+              placeholder="Enter admin password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+            />
+          </div>
+          
+          <button className="ismaili-button w-full text-lg py-3">
+            Sign In
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }

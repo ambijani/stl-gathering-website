@@ -34,9 +34,9 @@ export default function Analytics() {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={pairsByDate}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
+              <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { timeZone: 'UTC' })} />
               <YAxis />
-              <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString()} />
+              <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString('en-US', { timeZone: 'UTC' })} />
               <Line type="monotone" dataKey="pairs" />
             </LineChart>
           </ResponsiveContainer>
@@ -64,9 +64,9 @@ export default function Analytics() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={varoFill}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString()} />
+              <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { timeZone: 'UTC' })} />
               <YAxis />
-              <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString()} />
+              <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString('en-US', { timeZone: 'UTC' })} />
               <Legend />
               <Bar dataKey="assigned" />
               <Bar dataKey="capacity" />
