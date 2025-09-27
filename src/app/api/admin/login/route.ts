@@ -35,15 +35,20 @@ export async function POST(req: Request) {
     
     console.log('Login attempt - Generated session value:', val);
     
-    res.cookies.set("admin", val, {
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // Only secure in production
-      sameSite: "strict",
+      sameSite: "strict" as const,
       path: "/",
       maxAge: 60 * 60 * 8,      // 8 hours
-    });
+    };
+    
+    res.cookies.set("admin", val, cookieOptions);
     
     console.log('Login attempt - Authentication successful, cookie set');
+    console.log('Login attempt - Cookie options:', cookieOptions);
+    console.log('Login attempt - Cookie value set:', val);
+    
     return res;
   } catch (error) {
     console.error('Login error:', error);
