@@ -31,6 +31,20 @@ export default async function connect() {
       console.log('MongoDB - Connection established successfully');
       console.log('MongoDB - Connection state:', m.connection.readyState);
       console.log('MongoDB - Database name:', m.connection.name);
+      console.log('MongoDB - Host:', m.connection.host);
+      console.log('MongoDB - Port:', m.connection.port);
+      console.log('MongoDB - Environment:', process.env.NODE_ENV);
+      
+      // Parse URI to show database info without exposing credentials
+      try {
+        const url = new URL(MONGODB_URI);
+        console.log('MongoDB - URI Host:', url.hostname);
+        console.log('MongoDB - URI Database:', url.pathname.substring(1));
+        console.log('MongoDB - URI Auth Source:', url.searchParams.get('authSource'));
+      } catch (e) {
+        console.log('MongoDB - Could not parse URI for logging');
+      }
+      
       return m;
     }).catch((error) => {
       console.error('MongoDB - Connection failed:', error);

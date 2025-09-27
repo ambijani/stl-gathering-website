@@ -19,6 +19,31 @@ export async function GET() {
     console.log('People API - MongoDB connection successful');
     
     console.log('People API - Querying Person collection...');
+    
+    // First, let's check what collections exist in this database
+    const mongoose = await import('mongoose');
+    const db = mongoose.default.connection.db;
+    
+    if (db) {
+      const collections = await db.listCollections().toArray();
+      console.log('People API - Available collections:', collections.map(c => c.name));
+      
+      // Check if Person collection exists
+      const personCollectionExists = collections.some(c => c.name === 'people');
+      console.log('People API - Person collection exists:', personCollectionExists);
+      
+      // Try to get the collection count
+      try {
+        const collection = db.collection('people');
+        const count = await collection.countDocuments();
+        console.log('People API - Person collection document count:', count);
+      } catch (e) {
+        console.log('People API - Could not get collection count:', (e as Error).message);
+      }
+    } else {
+      console.log('People API - Database connection not available');
+    }
+    
     const rows = await Person.find().sort({ createdAt: -1 }).lean();
     console.log(`People API - Found ${rows.length} people in database`);
     
