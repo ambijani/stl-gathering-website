@@ -12,20 +12,28 @@ export default function AdminHome() {
     // Check if user is authenticated by checking for admin cookie
     const checkAuth = async () => {
       try {
-        const response = await fetch("/api/admin/metrics/overview");
+        console.log('Admin page - Checking authentication...');
+        const response = await fetch("/api/admin/health");
+        console.log('Admin page - Auth check response status:', response.status);
+        
         if (response.ok) {
+          console.log('Admin page - Authentication successful');
           setIsAuthenticated(true);
         } else {
+          console.log('Admin page - Authentication failed, redirecting to login');
           router.replace("/admin/login");
         }
       } catch (error) {
+        console.error('Admin page - Auth check error:', error);
         router.replace("/admin/login");
       } finally {
         setIsLoading(false);
       }
     };
     
-    checkAuth();
+    // Add a small delay to ensure cookies are set after login redirect
+    const timer = setTimeout(checkAuth, 100);
+    return () => clearTimeout(timer);
   }, [router]);
 
   if (isLoading) {

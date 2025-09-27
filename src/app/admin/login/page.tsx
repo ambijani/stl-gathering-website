@@ -6,9 +6,26 @@ export default function AdminLogin() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch("/api/admin/login", { method: "POST", body: password });
-    if (res.ok) location.href = "/admin";
-    else alert("Invalid password");
+    console.log('Login form - Submitting password...');
+    
+    try {
+      const res = await fetch("/api/admin/login", { method: "POST", body: password });
+      console.log('Login form - Response status:', res.status);
+      
+      if (res.ok) {
+        console.log('Login form - Login successful, redirecting...');
+        // Add a small delay to ensure cookie is set before redirect
+        setTimeout(() => {
+          location.href = "/admin";
+        }, 200);
+      } else {
+        console.log('Login form - Login failed');
+        alert("Invalid password");
+      }
+    } catch (error) {
+      console.error('Login form - Error:', error);
+      alert("Login failed. Please try again.");
+    }
   }
 
   return (
