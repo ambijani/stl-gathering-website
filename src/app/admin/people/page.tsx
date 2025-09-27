@@ -9,10 +9,38 @@ export default function PeoplePage() {
 
   useEffect(() => {
     (async () => {
-      const res = await fetch("/api/admin/people", { cache: "no-store" });
-      const data = await res.json();
-      setPeople(data);
-      setLoading(false);
+      try {
+        console.log('People Page - Starting to fetch people data...');
+        const res = await fetch("/api/admin/people", { cache: "no-store" });
+        console.log('People Page - Fetch response status:', res.status);
+        
+        if (!res.ok) {
+          console.error('People Page - Fetch failed with status:', res.status);
+          const errorData = await res.text();
+          console.error('People Page - Error response:', errorData);
+          return;
+        }
+        
+        const data = await res.json();
+        console.log(`People Page - Received ${data.length} people from API`);
+        
+        if (data.length > 0) {
+          console.log('People Page - Sample people received:', data.slice(0, 3).map((p: Person) => ({
+            id: p._id,
+            name: p.name,
+            hasEmail: !!p.email,
+            hasPhone: !!p.phone,
+            interestsCount: p.interests?.length || 0
+          })));
+        }
+        
+        setPeople(data);
+        setLoading(false);
+        console.log('People Page - People data loaded successfully');
+      } catch (error) {
+        console.error('People Page - Error fetching people:', error);
+        setLoading(false);
+      }
     })();
   }, []);
 
