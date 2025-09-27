@@ -35,9 +35,12 @@ export function middleware(req: NextRequest) {
   
   // always redirect /admin to /admin/login
   if (pathname === "/admin") {
-    const url = req.nextUrl.clone();
-    url.pathname = "/admin/login";
-    return NextResponse.redirect(url);
+    if (!isAuthed) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/admin/login";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
   }
 
   // protect all other /admin pages (but not /admin/login)
