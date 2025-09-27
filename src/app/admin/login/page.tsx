@@ -9,7 +9,11 @@ export default function AdminLogin() {
     console.log('Login form - Submitting password...');
     
     try {
-      const res = await fetch("/api/admin/login", { method: "POST", body: password });
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        body: password,
+        credentials: "include",
+      });
       console.log('Login form - Response status:', res.status);
       
       if (res.ok) {
