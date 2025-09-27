@@ -1,6 +1,50 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function AdminHome() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    // Check if user is authenticated by checking for admin cookie
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/admin/metrics/overview");
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          router.replace("/admin/login");
+        }
+      } catch (error) {
+        router.replace("/admin/login");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen ismaili-bg-pattern flex items-center justify-center">
+        <div className="ismaili-card p-8 text-center">
+          <div className="text-4xl mb-4">🔄</div>
+          <h2 className="text-xl font-semibold ismaili-text-primary">Loading...</h2>
+          <p className="text-gray-600">Checking authentication</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; // Will redirect to login
+  }
+
+  // Show admin dashboard if authenticated
   return (
     <div className="min-h-screen ismaili-bg-pattern">
       <div className="ismaili-header">
