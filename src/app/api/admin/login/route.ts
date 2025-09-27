@@ -10,23 +10,43 @@ function getSessionValue() {
 }
 
 export async function POST(req: Request) {
-  const input = await req.text();
-  const envPwd = process.env.ADMIN_PASSWORD ?? "";
-  // constant-time compare
-  const a = Buffer.from(input);
-  const b = Buffer.from(envPwd);
-  const ok = a.length === b.length && timingSafeEqual(a, b);
+  try {
+    const input = await req.text();
+    const envPwd = process.env.ADMIN_PASSWORD ?? "";
+    
+    console.log('Login attempt - Input length:', input.length);
+    console.log('Login attempt - Env password length:', envPwd.length);
+    console.log('Login attempt - Environment:', process.env.NODE_ENV);
+    
+    // constant-time compare
+    const a = Buffer.from(input);
+    const b = Buffer.from(envPwd);
+    const ok = a.length === b.length && timingSafeEqual(a, b);
 
-  if (!ok) return new Response("Forbidden", { status: 403 });
+    console.log('Login attempt - Password match:', ok);
 
-  const res = new NextResponse("OK");
-  const val = getSessionValue(); // "1.<nonce>"
-  res.cookies.set("admin", val, {
-    httpOnly: true,
-    secure: true,             // important on Vercel (HTTPS)
-    sameSite: "strict",
-    path: "/",
-    maxAge: 60 * 60 * 8,      // 8 hours
-  });
-  return res;
+    if (!ok) {
+      console.log('Login attempt - Authentication failed');
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    const res = new NextResponse("OK");
+    const val = getSessionValue(); // "1.<nonce>"
+    
+    console.log('Login attempt - Generated session value:', val);
+    
+    res.cookies.set("admin", val, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Only secure in production
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60 * 8,      // 8 hours
+    });
+    
+    console.log('Login attempt - Authentication successful, cookie set');
+    return res;
+  } catch (error) {
+    console.error('Login error:', error);
+    return new Response("Internal Server Error", { status: 500 });
+  }
 }

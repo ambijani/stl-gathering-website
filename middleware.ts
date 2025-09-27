@@ -6,6 +6,14 @@ export function middleware(req: NextRequest) {
   const adminCookie = req.cookies.get("admin")?.value;
   const isAuthed = !!adminCookie && adminCookie.startsWith("1.");
 
+  // Debug logging for authentication issues
+  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+    console.log(`Middleware - Path: ${pathname}`);
+    console.log(`Middleware - Admin cookie present: ${!!adminCookie}`);
+    console.log(`Middleware - Admin cookie value: ${adminCookie}`);
+    console.log(`Middleware - Is authenticated: ${isAuthed}`);
+  }
+
   // allowlist: next internals & public files
   if (
     pathname.startsWith("/_next") ||
