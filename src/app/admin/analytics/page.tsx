@@ -29,7 +29,7 @@ export default function Analytics() {
   return (
     <div className="p-6 space-y-10">
       <section>
-        <h2 className="text-xl font-semibold mb-2">Pairs Distributed per Date</h2>
+        <h2 className="text-xl font-semibold mb-2">Shoe Count per Date</h2>
         <div className="w-full h-80 border rounded p-2">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={pairsByDate}>
