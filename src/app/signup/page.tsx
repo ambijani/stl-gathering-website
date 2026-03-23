@@ -21,6 +21,7 @@ export default function Signup() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [otherChecked, setOtherChecked] = useState(false);
   const [otherText, setOtherText] = useState("");
+  const [open, setOpen] = useState(false);
   const [ok, setOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,39 +117,54 @@ export default function Signup() {
                 <label className="block text-sm font-medium ismaili-text-primary mb-2">
                   Varos I&apos;m interested in
                 </label>
-                <div className="border rounded-lg divide-y bg-white">
-                  {VARO_OPTIONS.map(opt => (
-                    <label key={opt} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-gray-50">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded"
-                        checked={selected.has(opt)}
-                        onChange={() => toggleInterest(opt)}
-                      />
-                      <span className="text-sm">{opt}</span>
-                    </label>
-                  ))}
-                  {/* Other */}
-                  <div className="px-4 py-2.5">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded"
-                        checked={otherChecked}
-                        onChange={e => { setOtherChecked(e.target.checked); if (!e.target.checked) setOtherText(""); }}
-                      />
-                      <span className="text-sm">Other</span>
-                    </label>
-                    {otherChecked && (
-                      <input
-                        className="ismaili-input w-full mt-2 text-sm"
-                        placeholder="Please specify…"
-                        value={otherText}
-                        onChange={e => setOtherText(e.target.value)}
-                        autoFocus
-                      />
-                    )}
-                  </div>
+                <div className="border rounded-lg bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setOpen(o => !o)}
+                    className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-left"
+                  >
+                    <span className="text-gray-500">
+                      {selected.size + (otherChecked ? 1 : 0) === 0
+                        ? "Select Varos…"
+                        : `${selected.size + (otherChecked ? 1 : 0)} selected`}
+                    </span>
+                    <span className="text-gray-400">{open ? "▲" : "▼"}</span>
+                  </button>
+                  {open && (
+                    <div className="border-t divide-y">
+                      {VARO_OPTIONS.map(opt => (
+                        <label key={opt} className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-gray-50">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 rounded"
+                            checked={selected.has(opt)}
+                            onChange={() => toggleInterest(opt)}
+                          />
+                          <span className="text-sm">{opt}</span>
+                        </label>
+                      ))}
+                      <div className="px-4 py-2.5">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 rounded"
+                            checked={otherChecked}
+                            onChange={e => { setOtherChecked(e.target.checked); if (!e.target.checked) setOtherText(""); }}
+                          />
+                          <span className="text-sm">Other</span>
+                        </label>
+                        {otherChecked && (
+                          <input
+                            className="ismaili-input w-full mt-2 text-sm"
+                            placeholder="Please specify…"
+                            value={otherText}
+                            onChange={e => setOtherText(e.target.value)}
+                            autoFocus
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
