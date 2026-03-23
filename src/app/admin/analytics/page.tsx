@@ -5,15 +5,17 @@ import {
   BarChart, Bar, Legend, ResponsiveContainer, Cell,
 } from "recharts";
 
-type SignupByInterest = { interest: string | null; count: number };
-type PairsByDate      = { date: string; pairs: number };
-type VaroFill        = { date: string; capacity: number; assigned: number };
-type VaroFrequency   = { name: string; count: number };
+type SignupByInterest  = { interest: string | null; count: number };
+type PairsByDate       = { date: string; pairs: number };
+type VaroFill          = { date: string; capacity: number; assigned: number };
+type VaroFrequency     = { name: string; count: number };
+type ShoeCountByMonth  = { month: string; total: number };
 type OverviewRes = {
-  signupsByInterest: SignupByInterest[];
-  pairsByDate:       PairsByDate[];
-  varoFill:          VaroFill[];
-  varoFrequency:     VaroFrequency[];
+  signupsByInterest:  SignupByInterest[];
+  pairsByDate:        PairsByDate[];
+  varoFill:           VaroFill[];
+  varoFrequency:      VaroFrequency[];
+  shoeCountByMonth:   ShoeCountByMonth[];
 };
 
 const COLORS = ["#4f46e5","#7c3aed","#db2777","#ea580c","#16a34a","#0891b2","#ca8a04"];
@@ -28,6 +30,7 @@ export default function Analytics() {
   const [pbd,     setPbd]       = useState<PairsByDate[]>([]);
   const [vf,      setVf]        = useState<VaroFill[]>([]);
   const [freq,    setFreq]      = useState<VaroFrequency[]>([]);
+  const [scm,     setScm]       = useState<ShoeCountByMonth[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -37,6 +40,7 @@ export default function Analytics() {
       setPbd((data.pairsByDate ?? []).map(d => ({ date: String(d.date), pairs: Number(d.pairs ?? 0) })));
       setVf((data.varoFill ?? []).map(d => ({ date: String(d.date), capacity: Number(d.capacity ?? 0), assigned: Number(d.assigned ?? 0) })));
       setFreq(data.varoFrequency ?? []);
+      setScm(data.shoeCountByMonth ?? []);
       setLoading(false);
     })();
   }, []);
@@ -69,7 +73,26 @@ export default function Analytics() {
         )}
       </section>
 
-      {/* Shoe Count */}
+      {/* Shoe Count by Month */}
+      <section>
+        <h2 className="text-xl font-semibold mb-1">Shoe Count by Month</h2>
+        <p className="text-sm text-gray-500 mb-3">Total shoes counted per month across all gatherings</p>
+        {scm.length === 0 ? <p className="text-gray-400 text-sm">No shoe count data yet.</p> : (
+          <div className="w-full h-80 border rounded p-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={scm}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="total" name="Shoes" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </section>
+
+      {/* Shoe Count per Date */}
       <section>
         <h2 className="text-xl font-semibold mb-2">Shoe Count per Date</h2>
         {pbd.length === 0 ? <p className="text-gray-400 text-sm">No shoe count data yet.</p> : (

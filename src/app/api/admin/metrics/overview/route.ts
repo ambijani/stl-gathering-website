@@ -66,7 +66,31 @@ export async function GET() {
       { $project: { name: { $ifNull: ["$person.name", "Unknown"] }, count: 1, _id: 0 } },
     ]);
 
-    return Response.json({ signupsByInterest, pairsByDate, varoFill, varoFrequency });
+    const shoeCountByMonth = await Gathering.aggregate([
+      { $unwind: "$shoeCount" },
+      { $match: { "shoeCount.qty": { $gt: 0 } } },
+      {
+        $group: {
+          _id: { year: { $year: "$date" }, month: { $month: "$date" } },
+          total: { $sum: "$shoeCount.qty" },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      {
+        $project: {
+          _id: 0,
+          month: {
+            $dateToString: {
+              format: "%Y-%m",
+              date: { $dateFromParts: { year: "$_id.year", month: "$_id.month", day: 1 } },
+            },
+          },
+          total: 1,
+        },
+      },
+    ]);
+
+    return Response.json({ signupsByInterest, pairsByDate, varoFill, varoFrequency, shoeCountByMonth });
   } catch (error) {
     console.error("Analytics API error:", error);
     return Response.json(
