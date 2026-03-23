@@ -21,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         className={`inline-flex items-center rounded-full border px-3.5 py-1 text-sm font-semibold shadow-sm transition ${
           active
             ? "border-white/80 bg-white text-emerald-900 shadow-md"
-            : "border-white/45 bg-white/15 text-white hover:bg-white/25"
+            : "border-white/50 bg-transparent text-white hover:bg-white/15"
         }`}
       >
         {label}
