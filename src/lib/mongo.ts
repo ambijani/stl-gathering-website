@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI!;
-if (!MONGODB_URI) throw new Error("MONGODB_URI missing");
-
 type MongooseCache = {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -16,6 +13,9 @@ const cached: MongooseCache = global.__mongooseCache ?? { conn: null, promise: n
 
 export default async function connect() {
   if (cached.conn) return cached.conn;
+
+  const MONGODB_URI = process.env.MONGODB_URI;
+  if (!MONGODB_URI) throw new Error("MONGODB_URI missing");
 
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI).catch((error) => {
