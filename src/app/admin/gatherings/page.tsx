@@ -18,7 +18,8 @@ export default function GatheringsPage() {
     setLoading(true);
     const res = await fetch("/api/admin/gatherings", { cache: "no-store" });
     const data = (await res.json()) as Gathering[];
-    setItems(data);
+    // Most recent first
+    setItems([...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
     setLoading(false);
   }
 
@@ -83,9 +84,9 @@ export default function GatheringsPage() {
                 <thead className="ismaili-bg-subtle">
                   <tr>
                     <th className="text-left p-4 font-semibold ismaili-text-primary">Date</th>
-                    <th className="text-left p-4 font-semibold ismaili-text-primary">Title</th>
+                    <th className="text-left p-4 font-semibold ismaili-text-primary">Type</th>
                     <th className="text-left p-4 font-semibold ismaili-text-primary">Varos</th>
-                    <th className="text-left p-4 font-semibold ismaili-text-primary">Pairs (TOTAL)</th>
+                    <th className="text-left p-4 font-semibold ismaili-text-primary">Shoe Count</th>
                     <th className="text-left p-4 font-semibold ismaili-text-primary">Actions</th>
                   </tr>
                 </thead>
@@ -98,9 +99,13 @@ export default function GatheringsPage() {
                       return (
                         <tr key={g._id} className="border-t border-gray-100 hover:bg-gray-50">
                           <td className="p-4 font-medium">{new Date(g.date).toLocaleDateString('en-US', { timeZone: 'UTC' })}</td>
-                          <td className="p-4">{g.title || "-"}</td>
+                          <td className="p-4">
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${g.title?.includes("Chandraat") ? "bg-purple-100 text-purple-700" : "bg-green-100 text-green-700"}`}>
+                              {g.title?.includes("Chandraat") ? "Chandraat" : "Friday"}
+                            </span>
+                          </td>
                           <td className="p-4">{g.varos?.length ?? 0}</td>
-                          <td className="p-4">{totalPairs}</td>
+                          <td className="p-4">{totalPairs > 0 ? totalPairs : <span className="text-gray-400">—</span>}</td>
                           <td className="p-4">
                             <Link className="ismaili-text-primary hover:ismaili-text-secondary font-medium" href={`/admin/gatherings/${g._id}`}>
                               Manage →

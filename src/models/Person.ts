@@ -6,7 +6,7 @@ const PersonSchema = new Schema(
     email: String,
     phone: String,
     interests: [String],
-    availability: String
+    availability: String,
   },
   { timestamps: true }
 );
