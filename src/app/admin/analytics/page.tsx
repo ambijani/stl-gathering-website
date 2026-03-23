@@ -86,7 +86,7 @@ export default function Analytics() {
         <div className="flex items-end justify-between flex-wrap gap-3 mb-3">
           <div>
             <h2 className="text-xl font-semibold mb-1">Varo Frequency by Person</h2>
-            <p className="text-sm text-gray-500">Total Varos performed across all gatherings (top {freq.length})</p>
+            <p className="text-sm text-gray-500">Total Varos performed across all gatherings ({freq.length} people)</p>
           </div>
           <input
             className="ismaili-input text-sm w-56"
@@ -119,7 +119,7 @@ export default function Analytics() {
                         textAnchor="end"
                         fontSize={match ? 13 : 12}
                         fontWeight={match ? 700 : 400}
-                        fill={match ? "#d4af37" : "#4b5563"}
+                        fill={match ? "#111827" : "#4b5563"}
                       >
                         {payload.value}
                       </text>
@@ -131,7 +131,7 @@ export default function Analytics() {
                   {freq.map((entry, i) => {
                     const q = freqSearch.trim().toLowerCase();
                     const match = q && entry.name.toLowerCase().includes(q);
-                    return <Cell key={i} fill={match ? "#d4af37" : COLORS[i % COLORS.length]} />;
+                    return <Cell key={i} fill={match ? "#111827" : COLORS[i % COLORS.length]} />;
                   })}
                 </Bar>
               </BarChart>

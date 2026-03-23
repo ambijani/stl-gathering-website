@@ -60,7 +60,6 @@ export async function GET() {
       { $unwind: "$varos.assignedPeople" },
       { $group: { _id: "$varos.assignedPeople", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
-      { $limit: 40 },
       { $lookup: { from: "people", localField: "_id", foreignField: "_id", as: "person" } },
       { $unwind: { path: "$person", preserveNullAndEmptyArrays: true } },
       { $project: { name: { $ifNull: ["$person.name", "Unknown"] }, count: 1, _id: 0 } },
