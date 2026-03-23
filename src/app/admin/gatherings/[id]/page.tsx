@@ -9,6 +9,14 @@ type Gathering = { _id: string; title?: string; date: string; notes?: string; va
 const FRIDAY_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
 const CHANDRAAT_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Chandraat Ginan", "Article of the Month", "Chandraat Tasbih", "Announcements", "Conclusion Dua"];
 
+const TEMPLATES: { label: string; varos: string[]; border: string; text: string; hover: string }[] = [
+  { label: "Friday Vaaros",    varos: FRIDAY_VAROS,    border: "border-green-300",  text: "text-green-700",  hover: "hover:bg-green-50"  },
+  { label: "Chandraat Vaaros", varos: CHANDRAAT_VAROS, border: "border-purple-300", text: "text-purple-700", hover: "hover:bg-purple-50" },
+  { label: "Kushali",          varos: FRIDAY_VAROS,    border: "border-yellow-300", text: "text-yellow-700", hover: "hover:bg-yellow-50" },
+  { label: "Eid",              varos: FRIDAY_VAROS,    border: "border-blue-300",   text: "text-blue-700",   hover: "hover:bg-blue-50"   },
+  { label: "Taliqah",          varos: FRIDAY_VAROS,    border: "border-orange-300", text: "text-orange-700", hover: "hover:bg-orange-50" },
+];
+
 export default function GatheringDetail() {
   const { id } = useParams<{ id: string }>();
   const [g, setG] = useState<Gathering | null>(null);
@@ -194,22 +202,17 @@ export default function GatheringDetail() {
           {/* Template buttons */}
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-xs text-gray-500 font-medium">Load template:</span>
-            <button
-              type="button"
-              disabled={loadingTemplate}
-              onClick={() => loadTemplate(FRIDAY_VAROS)}
-              className="px-3 py-1 text-xs rounded border border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-50"
-            >
-              Friday Vaaros
-            </button>
-            <button
-              type="button"
-              disabled={loadingTemplate}
-              onClick={() => loadTemplate(CHANDRAAT_VAROS)}
-              className="px-3 py-1 text-xs rounded border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:opacity-50"
-            >
-              Chandraat Vaaros
-            </button>
+            {TEMPLATES.map(t => (
+              <button
+                key={t.label}
+                type="button"
+                disabled={loadingTemplate}
+                onClick={() => loadTemplate(t.varos)}
+                className={`px-3 py-1 text-xs rounded border ${t.border} ${t.text} ${t.hover} disabled:opacity-50`}
+              >
+                {t.label}
+              </button>
+            ))}
             {loadingTemplate && <span className="text-xs text-gray-400">Adding…</span>}
           </div>
 
