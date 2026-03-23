@@ -175,8 +175,11 @@ async function importSchedule(wb: xlsx.WorkBook) {
         const cellValue = String(varoRow[c] ?? "").trim();
         if (!cellValue) continue; // No one assigned
 
-        // Multiple people separated by "+" (e.g. "Zahra Ladak + Madar Gul")
-        const personNames = cellValue.split("+").map(s => s.trim()).filter(Boolean);
+        // Multiple people separated by "+", ",", or "/" — strip parenthetical notes like "(Satada Tasbih)"
+        const personNames = cellValue
+          .split(/[+,/]/)
+          .map(s => s.replace(/\(.*?\)/g, "").trim())
+          .filter(Boolean);
         const personIds: string[] = [];
         for (const pName of personNames) {
           const id = await upsertPerson(pName);
