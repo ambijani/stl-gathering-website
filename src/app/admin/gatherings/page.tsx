@@ -6,19 +6,33 @@ import Link from "next/link";
 type Varo = { _id: string; title: string; capacity?: number; assignedPeople?: string[] };
 type Gathering = { _id: string; title?: string; date: string; notes?: string; varos: Varo[]; shoeCount: { size: string; qty: number }[] };
 
+const GATHERING_TYPES = [
+  { value: "Friday Vaaros",    label: "Friday Vaaros",    bg: "bg-green-100",  text: "text-green-700"  },
+  { value: "Chandraat Vaaros", label: "Chandraat Vaaros", bg: "bg-purple-100", text: "text-purple-700" },
+  { value: "Kushali",          label: "Kushali",           bg: "bg-yellow-100", text: "text-yellow-700" },
+  { value: "Eid",              label: "Eid",               bg: "bg-blue-100",   text: "text-blue-700"   },
+  { value: "Taliqah",          label: "Taliqah",           bg: "bg-orange-100", text: "text-orange-700" },
+  { value: "Other",            label: "Other",             bg: "bg-gray-100",   text: "text-gray-600"   },
+];
+
+function typeBadge(title?: string) {
+  const match = GATHERING_TYPES.find(t => title?.includes(t.value));
+  const { label, bg, text } = match ?? GATHERING_TYPES[GATHERING_TYPES.length - 1];
+  return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${bg} ${text}`}>{label}</span>;
+}
+
 export default function GatheringsPage() {
   const [items, setItems] = useState<Gathering[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [title, setTitle] = useState<string>("");
-  const [date, setDate] = useState<string>(""); // yyyy-mm-dd
+  const [type, setType] = useState<string>("Friday Vaaros");
+  const [date, setDate] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
 
   async function load() {
     setLoading(true);
     const res = await fetch("/api/admin/gatherings", { cache: "no-store" });
     const data = (await res.json()) as Gathering[];
-    // Most recent first
     setItems([...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
     setLoading(false);
   }
@@ -28,15 +42,14 @@ export default function GatheringsPage() {
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!date) { alert("Pick a date"); return; }
-    // Create date in local timezone to avoid timezone conversion issues
-    const localDate = new Date(date + 'T12:00:00'); // Use noon to avoid timezone edge cases
+    const localDate = new Date(date + "T12:00:00");
     const res = await fetch("/api/admin/gatherings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: title || "Gathering", date: localDate.toISOString(), notes: notes || "" })
+      body: JSON.stringify({ title: type, date: localDate.toISOString(), notes }),
     });
     if (!res.ok) { alert(`Failed to create: ${await res.text()}`); return; }
-    setTitle(""); setDate(""); setNotes(""); await load();
+    setDate(""); setNotes(""); await load();
   }
 
   return (
@@ -47,30 +60,33 @@ export default function GatheringsPage() {
           <p className="text-lg opacity-90">Manage community gatherings and activities</p>
         </div>
       </div>
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="ismaili-card p-6">
             <h2 className="text-xl font-semibold ismaili-text-primary mb-4">Create New Gathering</h2>
             <form onSubmit={onCreate} className="grid gap-4 md:grid-cols-4">
-              <input 
-                className="ismaili-input" 
-                placeholder="Title (optional)" 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)} 
+              <select
+                className="ismaili-input"
+                value={type}
+                onChange={e => setType(e.target.value)}
+              >
+                {GATHERING_TYPES.map(t => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+              <input
+                className="ismaili-input"
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                required
               />
-              <input 
-                className="ismaili-input" 
-                type="date" 
-                value={date} 
-                onChange={(e) => setDate(e.target.value)} 
-                required 
-              />
-              <input 
-                className="ismaili-input md:col-span-2" 
-                placeholder="Notes (optional)" 
-                value={notes} 
-                onChange={(e) => setNotes(e.target.value)} 
+              <input
+                className="ismaili-input md:col-span-2"
+                placeholder="Notes (optional)"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
               />
               <div className="md:col-span-4">
                 <button className="ismaili-button">Create Gathering</button>
@@ -94,16 +110,12 @@ export default function GatheringsPage() {
                   {loading ? (
                     <tr><td className="p-4 text-center" colSpan={5}>Loading…</td></tr>
                   ) : items.length ? (
-                    items.map((g) => {
-                      const totalPairs = (g.shoeCount || []).reduce((sum, r) => sum + (Number(r.qty) || 0), 0) || 0;
+                    items.map(g => {
+                      const totalPairs = (g.shoeCount || []).reduce((s, r) => s + (Number(r.qty) || 0), 0);
                       return (
                         <tr key={g._id} className="border-t border-gray-100 hover:bg-gray-50">
-                          <td className="p-4 font-medium">{new Date(g.date).toLocaleDateString('en-US', { timeZone: 'UTC' })}</td>
-                          <td className="p-4">
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${g.title?.includes("Chandraat") ? "bg-purple-100 text-purple-700" : "bg-green-100 text-green-700"}`}>
-                              {g.title?.includes("Chandraat") ? "Chandraat" : "Friday"}
-                            </span>
-                          </td>
+                          <td className="p-4 font-medium">{new Date(g.date).toLocaleDateString("en-US", { timeZone: "UTC" })}</td>
+                          <td className="p-4">{typeBadge(g.title)}</td>
                           <td className="p-4">{g.varos?.length ?? 0}</td>
                           <td className="p-4">{totalPairs > 0 ? totalPairs : <span className="text-gray-400">—</span>}</td>
                           <td className="p-4">

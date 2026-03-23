@@ -55,7 +55,18 @@ export async function GET() {
       { $sort: { date: 1 } }
     ]);
 
-    return Response.json({ signupsByInterest, pairsByDate, varoFill });
+    const varoFrequency = await Gathering.aggregate([
+      { $unwind: "$varos" },
+      { $unwind: "$varos.assignedPeople" },
+      { $group: { _id: "$varos.assignedPeople", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 40 },
+      { $lookup: { from: "people", localField: "_id", foreignField: "_id", as: "person" } },
+      { $unwind: { path: "$person", preserveNullAndEmptyArrays: true } },
+      { $project: { name: { $ifNull: ["$person.name", "Unknown"] }, count: 1, _id: 0 } },
+    ]);
+
+    return Response.json({ signupsByInterest, pairsByDate, varoFill, varoFrequency });
   } catch (error) {
     console.error("Analytics API error:", error);
     return Response.json(
