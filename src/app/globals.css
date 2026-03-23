@@ -44,12 +44,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-a {
+:where(a) {
   color: var(--primary);
   text-underline-offset: 2px;
   transition: color 0.15s;
 }
-a:hover { color: var(--accent); }
+:where(a):hover { color: var(--accent); }
 
 /* ── Public header ─────────────────────────────────────────────────────── */
 .ismaili-header {
