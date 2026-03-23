@@ -9,6 +9,15 @@ type Gathering = { _id: string; title?: string; date: string; notes?: string; va
 const FRIDAY_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
 const CHANDRAAT_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Chandraat Ginan", "Article of the Month", "Chandraat Tasbih", "Announcements", "Conclusion Dua"];
 
+const GATHERING_TYPES = [
+  "Friday Vaaros",
+  "Chandraat Vaaros",
+  "Kushali",
+  "Eid",
+  "Taliqah",
+  "Other",
+];
+
 const TEMPLATES: { label: string; varos: string[]; border: string; text: string; hover: string }[] = [
   { label: "Friday Vaaros",    varos: FRIDAY_VAROS,    border: "border-green-300",  text: "text-green-700",  hover: "hover:bg-green-50"  },
   { label: "Chandraat Vaaros", varos: CHANDRAAT_VAROS, border: "border-purple-300", text: "text-purple-700", hover: "hover:bg-purple-50" },
@@ -182,11 +191,25 @@ export default function GatheringDetail() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div>
+      <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-2xl font-semibold">
-          {g.title || "Gathering"} — {new Date(g.date).toLocaleDateString("en-US", { timeZone: "UTC" })}
+          {new Date(g.date).toLocaleDateString("en-US", { timeZone: "UTC" })}
         </h1>
-        {g.notes && <p className="text-sm text-gray-600 mt-1">{g.notes}</p>}
+        <select
+          value={g.title ?? ""}
+          onChange={async e => {
+            const res = await fetch(`/api/admin/gatherings/${id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ title: e.target.value }),
+            });
+            if (res.ok) await loadGathering(); else alert("Failed to update type.");
+          }}
+          className="border rounded px-2 py-1 text-sm"
+        >
+          {GATHERING_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        {g.notes && <p className="text-sm text-gray-600 w-full mt-0.5">{g.notes}</p>}
       </div>
 
       {/* Tabs */}
