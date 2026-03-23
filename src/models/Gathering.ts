@@ -4,11 +4,8 @@ const VaroSchema = new Schema(
   {
     title: { type: String, required: true },
     description: String,
-    location: String,
-    startTime: Date,
-    endTime: Date,
+    varoDate: Date,
     capacity: Number,
-    tags: [String],
     assignedPeople: [{ type: Schema.Types.ObjectId, ref: "Person" }]
   },
   { _id: true }

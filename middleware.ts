@@ -1,18 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { verifySessionToken } from "@/lib/session";
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const adminCookie = req.cookies.get("admin")?.value;
-  const isAuthed = !!adminCookie && adminCookie.startsWith("1.");
-
-  // Debug logging for authentication issues
-  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
-    console.log(`Middleware - Path: ${pathname}`);
-    console.log(`Middleware - Admin cookie present: ${!!adminCookie}`);
-    console.log(`Middleware - Admin cookie value: ${adminCookie}`);
-    console.log(`Middleware - Is authenticated: ${isAuthed}`);
-  }
 
   // allowlist: next internals & public files
   if (
@@ -32,10 +23,11 @@ export function middleware(req: NextRequest) {
 
   // login page must be public
   const isLoginPage = pathname === "/admin/login";
-  
+
   // always redirect /admin to /admin/login
   if (pathname === "/admin") {
-    if (!isAuthed) {
+    const token = req.cookies.get("admin")?.value;
+    if (!(await verifySessionToken(token))) {
       const url = req.nextUrl.clone();
       url.pathname = "/admin/login";
       return NextResponse.redirect(url);
@@ -44,21 +36,21 @@ export function middleware(req: NextRequest) {
   }
 
   // protect all other /admin pages (but not /admin/login)
-  const isProtectedAdminPage =
-    pathname.startsWith("/admin") && !isLoginPage;
+  const isProtectedAdminPage = pathname.startsWith("/admin") && !isLoginPage;
 
   // protect /api/admin/* except the allowlisted ones
-  const isProtectedAdminApi =
-    pathname.startsWith("/api/admin") && !isPublicAdminApi;
+  const isProtectedAdminApi = pathname.startsWith("/api/admin") && !isPublicAdminApi;
 
-  if ((isProtectedAdminPage || isProtectedAdminApi) && !isAuthed) {
-    // API -> 401; Pages -> redirect to login
-    if (pathname.startsWith("/api/")) {
-      return new NextResponse("Unauthorized", { status: 401 });
+  if (isProtectedAdminPage || isProtectedAdminApi) {
+    const token = req.cookies.get("admin")?.value;
+    if (!(await verifySessionToken(token))) {
+      if (pathname.startsWith("/api/")) {
+        return new NextResponse("Unauthorized", { status: 401 });
+      }
+      const url = req.nextUrl.clone();
+      url.pathname = "/admin/login";
+      return NextResponse.redirect(url);
     }
-    const url = req.nextUrl.clone();
-    url.pathname = "/admin/login";
-    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
@@ -66,12 +58,6 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
-}
+};

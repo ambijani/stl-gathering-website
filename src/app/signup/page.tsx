@@ -4,6 +4,7 @@ import { useState } from "react";
 export default function Signup() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", interests: "", availability: "" });
   const [ok, setOk] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function update(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -11,13 +12,19 @@ export default function Signup() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     const interests = form.interests ? form.interests.split(",").map((s) => s.trim()).filter(Boolean) : [];
     const res = await fetch("/api/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, interests })
     });
-    setOk(res.ok);
+    if (res.ok) {
+      setOk(true);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Something went wrong. Please try again.");
+    }
   }
 
   if (ok) return (
@@ -96,6 +103,9 @@ export default function Signup() {
                 />
               </div>
               
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">{error}</p>
+              )}
               <button className="ismaili-button w-full text-lg py-3">
                 Join Our Community
               </button>
