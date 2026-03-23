@@ -287,84 +287,61 @@ export default function GatheringDetail() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
 
-          {/* Assignment panel */}
-          {currentVaro && (
-            <div className="p-4 border rounded bg-gray-50">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold">Assign people to: <span className="text-blue-700">{currentVaro.title}</span></h3>
-                <button className="text-sm underline" onClick={() => setAssignOpenFor(null)}>Close</button>
-              </div>
+      {/* ── Assign modal ── */}
+      {currentVaro && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={e => { if (e.target === e.currentTarget) setAssignOpenFor(null); }}>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 flex flex-col max-h-[85vh]">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h3 className="font-semibold text-sm">
+                Assign — <span className="text-blue-700">{currentVaro.title}</span>
+              </h3>
+              <button onClick={() => setAssignOpenFor(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
+            </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                {/* Left: searchable people list */}
-                <div>
+            {/* Search */}
+            <div className="px-4 pt-3 pb-2">
+              <input
+                autoFocus
+                className="border p-2 rounded w-full text-sm"
+                placeholder="Search people…"
+                value={peopleSearch}
+                onChange={e => setPeopleSearch(e.target.value)}
+              />
+            </div>
+
+            {/* People list */}
+            <div className="flex-1 overflow-auto px-4 divide-y">
+              {filteredPeople.map(p => (
+                <label key={p._id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 -mx-4 px-4">
                   <input
-                    className="border p-2 rounded w-full mb-2 text-sm"
-                    placeholder="Search people…"
-                    value={peopleSearch}
-                    onChange={e => setPeopleSearch(e.target.value)}
+                    type="checkbox"
+                    className="w-4 h-4"
+                    checked={!!selected[p._id]}
+                    onChange={() => setSelected(s => ({ ...s, [p._id]: !s[p._id] }))}
                   />
-                  <div className="max-h-72 overflow-auto border rounded bg-white">
-                    <table className="w-full text-sm">
-                      <tbody>
-                        {filteredPeople.map(p => (
-                          <tr key={p._id} className="border-b hover:bg-gray-50">
-                            <td className="p-2">
-                              <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={!!selected[p._id]}
-                                  onChange={() => setSelected(s => ({ ...s, [p._id]: !s[p._id] }))}
-                                />
-                                <span>{p.name}</span>
-                              </label>
-                            </td>
-                            <td className="p-2 text-xs text-gray-400">{(p.interests ?? []).join(", ")}</td>
-                          </tr>
-                        ))}
-                        {!filteredPeople.length && (
-                          <tr><td className="p-3 text-gray-500">No matches</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-gray-500">
-                      {Object.values(selected).filter(Boolean).length} selected
-                    </span>
-                    <button className="px-3 py-2 rounded bg-black text-white text-sm" onClick={saveAssignment}>
-                      Save Assignment
-                    </button>
-                  </div>
-                </div>
+                  <span className="text-sm">{p.name}</span>
+                </label>
+              ))}
+              {!filteredPeople.length && (
+                <p className="py-4 text-sm text-gray-400 text-center">No matches</p>
+              )}
+            </div>
 
-                {/* Right: currently assigned with remove buttons */}
-                <div>
-                  <h4 className="font-medium text-sm mb-2">Currently assigned ({(currentVaro.assignedPeople ?? []).length})</h4>
-                  {(currentVaro.assignedPeople ?? []).length === 0
-                    ? <p className="text-sm text-gray-400 italic">No one assigned yet.</p>
-                    : (
-                      <ul className="space-y-1">
-                        {(currentVaro.assignedPeople ?? []).map(pid => (
-                          <li key={pid} className="flex items-center justify-between text-sm bg-white border rounded px-2 py-1">
-                            <span>{personName(pid)}</span>
-                            <button
-                              className="text-red-500 hover:text-red-700 text-xs underline"
-                              onClick={() => setSelected(s => ({ ...s, [pid]: false }))}
-                            >
-                              Remove
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )
-                  }
-                  <p className="text-xs text-gray-400 mt-2">Uncheck or click Remove, then Save Assignment.</p>
-                </div>
+            {/* Footer */}
+            <div className="flex items-center justify-between px-4 py-3 border-t bg-gray-50 rounded-b-lg">
+              <span className="text-xs text-gray-500">
+                {Object.values(selected).filter(Boolean).length} selected
+              </span>
+              <div className="flex gap-2">
+                <button onClick={() => setAssignOpenFor(null)} className="px-3 py-1.5 rounded border text-sm">Cancel</button>
+                <button onClick={saveAssignment} className="px-3 py-1.5 rounded bg-black text-white text-sm">Save</button>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
