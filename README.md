@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# STL Gathering Website
+
+Community gathering management platform for the STL Ismaili community. Tracks Varo assignments, shoe counts, and member signups across Friday and Chandraat gatherings.
+
+## Features
+
+**Public**
+- Member signup form with Varo interest selection and WhatsApp community redirect
+
+**Admin**
+- People management — add, edit, merge, and remove members
+- Gatherings — create events (Friday, Chandraat, Kushali, Eid, Taliqah), assign Varos per person, track shoe counts
+- Varo assignment via modal or matrix view
+- Analytics — average shoe count by month, shoe count per date, Varo frequency by person
+- HMAC-SHA256 session auth with rate-limited login
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Database**: MongoDB / Mongoose
+- **Styling**: Tailwind CSS v4
+- **Auth**: HMAC-SHA256 signed session tokens (Web Crypto API)
+- **Deployment**: Vercel
+
+## Environment Variables
+
+```
+MONGODB_URI=your_mongodb_connection_string
+SESSION_SECRET=your_secret_key
+ADMIN_PASSWORD=your_admin_password
+```
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Data Import
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To import from a Google Sheets export (`data.xlsx`):
 
-## Learn More
+```bash
+npx tsx scripts/import-from-excel.ts
+```
 
-To learn more about Next.js, take a look at the following resources:
+The spreadsheet should have sheets: `Varo Form Responses`, `Schedule`, `Shoe Count`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+After re-importing, run the cleanup script to remove any orphaned combined-name records:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx tsx scripts/cleanup-combined-names.ts
+```
