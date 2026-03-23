@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 
 type Person = { _id: string; name: string; email?: string; interests?: string[] };
-type Varo = { _id: string; title: string; capacity?: number; assignedPeople?: string[] };
+type Varo = { _id: string; title: string; assignedPeople?: string[] };
 type Gathering = { _id: string; title?: string; date: string; notes?: string; varos: Varo[]; shoeCount: { size: string; qty: number }[] };
 
 const FRIDAY_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
@@ -41,21 +41,6 @@ export default function GatheringDetail() {
     void loadGathering();
     fetch("/api/admin/people").then(r => r.json()).then(setPeople);
   }, [loadGathering]);
-
-  // ── Varo creation ──────────────────────────────────────────────────────────
-  const [vTitle, setVTitle] = useState("");
-  const [vCapacity, setVCapacity] = useState<number | undefined>(undefined);
-
-  async function addVaro(e: React.FormEvent) {
-    e.preventDefault();
-    const res = await fetch(`/api/admin/gatherings/${id}/varos`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: vTitle, capacity: vCapacity }),
-    });
-    if (res.ok) { setVTitle(""); setVCapacity(undefined); await loadGathering(); }
-    else alert("Failed to add varo");
-  }
 
   async function deleteVaro(varoId: string) {
     if (!confirm("Delete this Varo?")) return;
@@ -209,7 +194,21 @@ export default function GatheringDetail() {
         >
           {GATHERING_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
-        {g.notes && <p className="text-sm text-gray-600 w-full mt-0.5">{g.notes}</p>}
+        <input
+          className="border rounded px-2 py-1 text-sm text-gray-600 w-full mt-1"
+          placeholder="Notes (optional)"
+          defaultValue={g.notes ?? ""}
+          onBlur={async e => {
+            const notes = e.target.value.trim();
+            if (notes === (g.notes ?? "")) return;
+            const res = await fetch(`/api/admin/gatherings/${id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ notes }),
+            });
+            if (res.ok) await loadGathering(); else alert("Failed to save notes.");
+          }}
+        />
       </div>
 
       {/* Tabs */}
@@ -239,20 +238,12 @@ export default function GatheringDetail() {
             {loadingTemplate && <span className="text-xs text-gray-400">Adding…</span>}
           </div>
 
-          {/* Add varo form */}
-          <form onSubmit={addVaro} className="flex flex-wrap items-end gap-2">
-            <input className="border p-2 rounded" placeholder="Varo title" value={vTitle} onChange={e => setVTitle(e.target.value)} required />
-            <input className="border p-2 rounded w-32" type="number" min={0} placeholder="Capacity" value={vCapacity ?? ""} onChange={e => setVCapacity(e.target.value ? Number(e.target.value) : undefined)} />
-            <button className="px-4 py-2 rounded bg-black text-white">Add Varo</button>
-          </form>
-
           {/* Varos table */}
           <div className="border rounded overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="text-left p-2 w-40">Title</th>
-                  <th className="text-left p-2 w-20">Cap</th>
                   <th className="text-left p-2">Assigned</th>
                   <th className="text-left p-2 w-32">Actions</th>
                 </tr>
@@ -267,7 +258,6 @@ export default function GatheringDetail() {
                   return (
                     <tr key={v._id} className="border-t">
                       <td className="p-2 font-medium">{v.title}</td>
-                      <td className="p-2 text-gray-500">{typeof v.capacity === "number" ? v.capacity : "—"}</td>
                       <td className="p-2">
                         {names.length === 0
                           ? <span className="text-gray-400 italic">None</span>
@@ -282,7 +272,7 @@ export default function GatheringDetail() {
                   );
                 })}
                 {(!g.varos || !g.varos.length) && (
-                  <tr><td className="p-4 text-gray-500" colSpan={4}>No Varos yet.</td></tr>
+                  <tr><td className="p-4 text-gray-500" colSpan={3}>No Varos yet.</td></tr>
                 )}
               </tbody>
             </table>

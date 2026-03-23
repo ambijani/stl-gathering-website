@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 
-type Person = { _id: string; name: string; email?: string; phone?: string; interests?: string[] };
+type Person = { _id: string; name: string; phone?: string; interests?: string[] };
 
 export default function PeoplePage() {
   const [people, setPeople]     = useState<Person[]>([]);

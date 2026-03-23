@@ -7,11 +7,9 @@ import { z } from "zod";
 
 const schema = z.object({
   name: z.string().min(1).max(120),
-  email: z.string().email().optional().or(z.literal("")),
   phone: z.string().max(32).optional().or(z.literal("")),
   interests: z.array(z.string()).max(50).optional(),
   availability: z.string().max(1000).optional().or(z.literal("")),
-  favoriteNooraniFamilyMember: z.string().max(200).optional().or(z.literal("")),
 });
 
 export async function POST(req: Request) {
@@ -24,18 +22,6 @@ export async function POST(req: Request) {
     const parsed = schema.safeParse(json);
     if (!parsed.success) {
       return Response.json({ error: "Invalid input", issues: parsed.error.issues }, { status: 400 });
-    }
-
-    // Prevent duplicate registrations when email is provided
-    const email = parsed.data.email;
-    if (email) {
-      const existing = await Person.findOne({ email }).lean();
-      if (existing) {
-        return Response.json(
-          { error: "This email is already registered." },
-          { status: 409 }
-        );
-      }
     }
 
     const doc = await Person.create(parsed.data);

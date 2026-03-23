@@ -17,7 +17,7 @@ const VARO_OPTIONS = [
 ];
 
 export default function Signup() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", availability: "" });
+  const [form, setForm] = useState({ name: "", phone: "", availability: "" });
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [otherChecked, setOtherChecked] = useState(false);
   const [otherText, setOtherText] = useState("");
@@ -87,17 +87,6 @@ export default function Signup() {
                   name="name"
                   placeholder="Enter your full name"
                   required
-                  onChange={update}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium ismaili-text-primary mb-2">Email</label>
-                <input
-                  className="ismaili-input w-full"
-                  name="email"
-                  type="email"
-                  placeholder="your.email@example.com"
                   onChange={update}
                 />
               </div>

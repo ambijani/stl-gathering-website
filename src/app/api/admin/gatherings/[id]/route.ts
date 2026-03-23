@@ -25,10 +25,13 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
   const { id } = await context.params;
   await connect();
 
-  const { title } = (await req.json()) as { title?: string };
-  if (!title) return new Response("title required", { status: 400 });
+  const body = (await req.json()) as { title?: string; notes?: string };
+  const set: Record<string, unknown> = {};
+  if (body.title) set.title = body.title;
+  if (body.notes !== undefined) set.notes = body.notes;
+  if (!Object.keys(set).length) return new Response("nothing to update", { status: 400 });
 
-  const g = await Gathering.findByIdAndUpdate(id, { $set: { title } }, { new: true }).lean();
+  const g = await Gathering.findByIdAndUpdate(id, { $set: set }, { new: true }).lean();
   if (!g) return new Response("Not found", { status: 404 });
   return Response.json(g);
 }
