@@ -76,7 +76,10 @@ export default function Signup() {
             <h1 className="text-4xl font-bold mb-2">Join Our Community</h1>
             <p className="text-lg opacity-90">Sign up for STL Ismaili gatherings and events</p>
           </div>
-          <Link href="/admin/login" className="text-sm text-white/90 hover:text-white mt-1 underline underline-offset-2">
+          <Link
+            href="/admin/login"
+            className="mt-1 inline-flex items-center rounded-full border border-white/80 bg-white px-3.5 py-1 text-sm font-semibold text-emerald-900 shadow-md transition hover:bg-white/90 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-800"
+          >
             Admin
           </Link>
         </div>
