@@ -86,7 +86,7 @@ export default function Analytics() {
         <div className="flex items-end justify-between flex-wrap gap-3 mb-3">
           <div>
             <h2 className="text-xl font-semibold mb-1">Varo Frequency by Person</h2>
-            <p className="text-sm text-gray-500">Total Varos performed across all gatherings ({freq.length} people)</p>
+            <p className="text-sm text-gray-500">Total Varos performed across all gatherings (top {freq.length})</p>
           </div>
           <input
             className="ismaili-input text-sm w-56"
@@ -107,6 +107,7 @@ export default function Analytics() {
                   type="category"
                   dataKey="name"
                   width={160}
+                  interval={0}
                   tick={(props) => {
                     const { x, y, payload } = props;
                     const q = freqSearch.trim().toLowerCase();
