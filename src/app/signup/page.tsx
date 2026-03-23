@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 
 const VARO_OPTIONS = [
   "1st Dua",
@@ -70,9 +71,14 @@ export default function Signup() {
   return (
     <div className="min-h-screen ismaili-bg-pattern">
       <div className="ismaili-header">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-2">Join Our Community</h1>
-          <p className="text-lg opacity-90">Sign up for STL Ismaili gatherings and events</p>
+        <div className="container mx-auto px-4 flex items-start justify-between">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Join Our Community</h1>
+            <p className="text-lg opacity-90">Sign up for STL Ismaili gatherings and events</p>
+          </div>
+          <Link href="/admin/login" className="text-sm opacity-70 hover:opacity-100 mt-1">
+            Admin
+          </Link>
         </div>
       </div>
 
