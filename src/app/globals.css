@@ -1,153 +1,165 @@
 @import "tailwindcss";
 
 :root {
-  /* Ismaili theme colors inspired by the.ismaili */
-  --ismaili-green: #2d5016; /* Deep forest green */
-  --ismaili-gold: #d4af37; /* Traditional gold */
-  --ismaili-light-green: #4a7c59; /* Lighter green for accents */
-  --ismaili-cream: #fafafa; /* Clean white background */
-  --ismaili-light-gray: #f5f5f5; /* Light gray for subtle backgrounds */
-  --ismaili-dark: #333333; /* Professional dark gray for text */
-  --ismaili-white: #ffffff;
-  --ismaili-border: #e5e5e5; /* Subtle border color */
-  
-  --background: var(--ismaili-white);
-  --foreground: var(--ismaili-dark);
-  --primary: var(--ismaili-green);
-  --secondary: var(--ismaili-gold);
-  --accent: var(--ismaili-light-green);
-  --surface: var(--ismaili-light-gray);
-  --border: var(--ismaili-border);
+  --green-900: #1a3009;
+  --green-800: #2d5016;
+  --green-600: #4a7c59;
+  --green-100: #eef5eb;
+  --gold:      #d4af37;
+  --gold-light:#f4d03f;
+  --cream:     #fafaf8;
+  --gray-50:   #f9fafb;
+  --gray-100:  #f3f4f6;
+  --gray-200:  #e5e7eb;
+  --gray-400:  #9ca3af;
+  --gray-600:  #4b5563;
+  --gray-800:  #1f2937;
+  --red-600:   #dc2626;
+  --white:     #ffffff;
+
+  --background: var(--white);
+  --foreground: var(--gray-800);
+  --primary:    var(--green-800);
+  --accent:     var(--green-600);
+  --border:     var(--gray-200);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
-  --color-accent: var(--accent);
-  --color-surface: var(--surface);
-  --color-border: var(--border);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary:    var(--primary);
+  --color-accent:     var(--accent);
+  --font-sans:        var(--font-geist-sans);
+  --font-mono:        var(--font-geist-mono);
 }
 
-/* Force light theme - no dark mode for now */
+html { color-scheme: light only; }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-sans), 'Segoe UI', sans-serif;
   line-height: 1.6;
   min-height: 100vh;
-}
-
-/* Accessibility and baseline tweaks */
-* {
   -webkit-tap-highlight-color: transparent;
 }
-html {
-  color-scheme: light only;
-}
+
 a {
-  text-underline-offset: 2px;
   color: var(--primary);
-  transition: color 0.2s ease;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
 }
-a:hover {
-  color: var(--secondary);
+a:hover { color: var(--accent); }
+
+/* ── Public header ─────────────────────────────────────────────────────── */
+.ismaili-header {
+  background: linear-gradient(135deg, var(--green-900) 0%, var(--green-600) 100%);
+  color: var(--white);
+  padding: 3rem 0;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
 }
 
-/* Ismaili-themed utility classes */
-.ismaili-gradient {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-}
-
-.ismaili-header-gradient {
-  background: linear-gradient(135deg, #2d5016 0%, #4a7c59 100%);
-}
-
-.ismaili-gold-gradient {
-  background: linear-gradient(135deg, var(--secondary) 0%, #f4d03f 100%);
-}
-
+/* ── Cards ─────────────────────────────────────────────────────────────── */
 .ismaili-card {
-  background: var(--ismaili-white);
+  background: var(--white);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
-.ismaili-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  transform: translateY(-1px);
-}
-
-.ismaili-button {
-  background: var(--primary);
-  color: var(--ismaili-white);
-  border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.ismaili-button:hover {
-  background: var(--accent);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(45, 80, 22, 0.2);
-}
-
-.ismaili-button-secondary {
-  background: var(--secondary);
-  color: var(--ismaili-dark);
-}
-
-.ismaili-button-secondary:hover {
-  background: #f4d03f;
-}
-
+/* ── Inputs ────────────────────────────────────────────────────────────── */
 .ismaili-input {
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 12px 16px;
-  background: var(--ismaili-white);
-  color: var(--ismaili-dark);
-  transition: all 0.3s ease;
+  padding: 10px 14px;
+  background: var(--white);
+  color: var(--foreground);
   font-size: 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-
 .ismaili-input:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(45, 80, 22, 0.1);
+  border-color: var(--green-600);
+  box-shadow: 0 0 0 3px rgba(74,124,89,0.12);
 }
 
-.ismaili-header {
-  background: linear-gradient(135deg, #2d5016 0%, #4a7c59 100%);
-  color: #ffffff;
-  padding: 3rem 0;
-  text-align: center;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+.ismaili-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green-800);
+  color: var(--white);
+  border: none;
+  border-radius: 7px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.ismaili-button:hover {
+  background: var(--green-900);
+  box-shadow: 0 2px 8px rgba(26,48,9,0.25);
 }
 
-.ismaili-text-primary {
-  color: var(--primary);
+/* ── Admin page shell ──────────────────────────────────────────────────── */
+.admin-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
 }
 
-.ismaili-text-secondary {
-  color: var(--secondary);
+.page-heading {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--green-900);
+  letter-spacing: -0.01em;
 }
 
+/* ── Admin tables ──────────────────────────────────────────────────────── */
+.admin-table {
+  width: 100%;
+  font-size: 0.875rem;
+  border-collapse: collapse;
+}
+.admin-table thead tr {
+  background: var(--gray-50);
+  border-bottom: 2px solid var(--gray-200);
+}
+.admin-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gray-600);
+}
+.admin-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+}
+.admin-table tbody tr:last-child td { border-bottom: none; }
+.admin-table tbody tr:hover { background: var(--gray-50); }
+
+/* ── Misc ──────────────────────────────────────────────────────────────── */
 .ismaili-bg-pattern {
-  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+  background: var(--cream);
   min-height: 100vh;
 }
+.ismaili-bg-subtle { background: var(--gray-50); }
+.ismaili-text-primary { color: var(--green-800); }
+.ismaili-text-secondary { color: var(--gold); }
 
-.ismaili-bg-subtle {
-  background: var(--surface);
+/* type badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }

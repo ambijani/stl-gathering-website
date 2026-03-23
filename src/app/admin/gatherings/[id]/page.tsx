@@ -171,32 +171,35 @@ export default function GatheringDetail() {
     else await loadGathering();
   }
 
-  if (!g) return <div className="p-6">Loading…</div>;
+  if (!g) return <div className="admin-page text-gray-400">Loading…</div>;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="admin-page space-y-6">
+
       {/* Header */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-2xl font-semibold">
-          {new Date(g.date).toLocaleDateString("en-US", { timeZone: "UTC" })}
-        </h1>
-        <select
-          value={g.title ?? ""}
-          onChange={async e => {
-            const res = await fetch(`/api/admin/gatherings/${id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ title: e.target.value }),
-            });
-            if (res.ok) await loadGathering(); else alert("Failed to update type.");
-          }}
-          className="border rounded px-2 py-1 text-sm"
-        >
-          {GATHERING_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
+      <div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="page-heading">
+            {new Date(g.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}
+          </h1>
+          <select
+            value={g.title ?? ""}
+            onChange={async e => {
+              const res = await fetch(`/api/admin/gatherings/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title: e.target.value }),
+              });
+              if (res.ok) await loadGathering(); else alert("Failed to update type.");
+            }}
+            className="ismaili-input text-sm py-1.5 px-3"
+          >
+            {GATHERING_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
         <input
-          className="border rounded px-2 py-1 text-sm text-gray-600 w-full mt-1"
-          placeholder="Notes (optional)"
+          className="mt-2 ismaili-input text-sm text-gray-600 w-full max-w-lg"
+          placeholder="Add notes…"
           defaultValue={g.notes ?? ""}
           onBlur={async e => {
             const notes = e.target.value.trim();
@@ -212,10 +215,17 @@ export default function GatheringDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
-        <button onClick={() => setTab("varos")} className={`px-3 py-1 rounded text-sm ${tab === "varos" ? "bg-black text-white" : "border"}`}>Varos</button>
-        <button onClick={() => setTab("matrix")} className={`px-3 py-1 rounded text-sm ${tab === "matrix" ? "bg-black text-white" : "border"}`}>Matrix</button>
-        <button onClick={() => setTab("shoes")} className={`px-3 py-1 rounded text-sm ${tab === "shoes" ? "bg-black text-white" : "border"}`}>Shoe Count</button>
+      <div className="flex gap-1 border-b">
+        {(["varos","matrix","shoes"] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors capitalize ${
+              tab === t
+                ? "border-[#2d5016] text-[#2d5016]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>
+            {t === "shoes" ? "Shoe Count" : t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
+        ))}
       </div>
 
       {/* ── Varos tab ── */}
@@ -239,13 +249,13 @@ export default function GatheringDetail() {
           </div>
 
           {/* Varos table */}
-          <div className="border rounded overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+          <div className="ismaili-card overflow-hidden">
+            <table className="admin-table">
+              <thead>
                 <tr>
-                  <th className="text-left p-2 w-40">Title</th>
-                  <th className="text-left p-2">Assigned</th>
-                  <th className="text-left p-2 w-32">Actions</th>
+                  <th>Varo</th>
+                  <th>Assigned</th>
+                  <th className="w-32"></th>
                 </tr>
               </thead>
               <tbody>
@@ -256,23 +266,25 @@ export default function GatheringDetail() {
                     ? names.join(", ")
                     : names.slice(0, 3).join(", ") + ` +${names.length - 3} more`;
                   return (
-                    <tr key={v._id} className="border-t">
-                      <td className="p-2 font-medium">{v.title}</td>
-                      <td className="p-2">
+                    <tr key={v._id}>
+                      <td className="font-medium text-gray-900">{v.title}</td>
+                      <td className="text-gray-500 text-sm">
                         {names.length === 0
-                          ? <span className="text-gray-400 italic">None</span>
+                          ? <span className="text-gray-300 italic">None</span>
                           : <span title={names.join(", ")}>{preview}</span>
                         }
                       </td>
-                      <td className="p-2 flex gap-2">
-                        <button className="underline text-blue-600" onClick={() => openAssign(v._id)}>Assign</button>
-                        <button className="underline text-red-600" onClick={() => deleteVaro(v._id)}>Delete</button>
+                      <td>
+                        <div className="flex gap-3">
+                          <button className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors" onClick={() => openAssign(v._id)}>Assign</button>
+                          <button className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors" onClick={() => deleteVaro(v._id)}>Delete</button>
+                        </div>
                       </td>
                     </tr>
                   );
                 })}
                 {(!g.varos || !g.varos.length) && (
-                  <tr><td className="p-4 text-gray-500" colSpan={3}>No Varos yet.</td></tr>
+                  <tr><td className="p-6 text-center text-gray-400" colSpan={3}>No Varos yet — load a template below.</td></tr>
                 )}
               </tbody>
             </table>
@@ -352,7 +364,7 @@ export default function GatheringDetail() {
                 <button
                   onClick={saveMatrix}
                   disabled={matrixSaving}
-                  className="px-4 py-2 rounded bg-black text-white text-sm disabled:opacity-50"
+                  className="ismaili-button text-sm py-2 disabled:opacity-50"
                 >
                   {matrixSaving ? "Saving…" : "Save All"}
                 </button>
@@ -437,8 +449,8 @@ export default function GatheringDetail() {
             </table>
           </div>
           <div className="flex gap-2">
-            <button className="px-3 py-2 rounded border text-sm" onClick={() => setShoeRows(rows => [...rows, { size: "", qty: 0 }])}>Add Row</button>
-            <button className="px-3 py-2 rounded bg-black text-white text-sm" onClick={saveShoeRows}>Save</button>
+            <button className="px-4 py-2 rounded-lg border text-sm font-medium hover:bg-gray-50 transition-colors" onClick={() => setShoeRows(rows => [...rows, { size: "", qty: 0 }])}>+ Add Row</button>
+            <button className="ismaili-button text-sm py-2" onClick={saveShoeRows}>Save</button>
           </div>
         </div>
       )}

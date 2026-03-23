@@ -45,10 +45,11 @@ export default function Analytics() {
     })();
   }, []);
 
-  if (loading) return <div className="p-6">Loading…</div>;
+  if (loading) return <div className="admin-page text-gray-400">Loading…</div>;
 
   return (
-    <div className="p-6 space-y-10">
+    <div className="admin-page space-y-10">
+      <h1 className="page-heading">Analytics</h1>
 
       {/* Varo Frequency */}
       <section>

@@ -53,87 +53,61 @@ export default function GatheringsPage() {
   }
 
   return (
-    <div className="min-h-screen ismaili-bg-pattern">
-      <div className="ismaili-header">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-2">Gatherings & Events</h1>
-          <p className="text-lg opacity-90">Manage community gatherings and activities</p>
+    <div className="admin-page space-y-6">
+
+      {/* Header + create form */}
+      <div className="flex items-start justify-between gap-6 flex-wrap">
+        <div>
+          <h1 className="page-heading">Gatherings</h1>
+          {!loading && <p className="text-sm text-gray-500 mt-0.5">{items.length} total</p>}
         </div>
+        <form onSubmit={onCreate} className="flex flex-wrap gap-2 items-end">
+          <select className="ismaili-input text-sm" value={type} onChange={e => setType(e.target.value)}>
+            {GATHERING_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+          <input className="ismaili-input text-sm" type="date" value={date} onChange={e => setDate(e.target.value)} required />
+          <input className="ismaili-input text-sm w-52" placeholder="Notes (optional)" value={notes} onChange={e => setNotes(e.target.value)} />
+          <button className="ismaili-button text-sm py-2.5 px-5">+ Create</button>
+        </form>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <div className="ismaili-card p-6">
-            <h2 className="text-xl font-semibold ismaili-text-primary mb-4">Create New Gathering</h2>
-            <form onSubmit={onCreate} className="grid gap-4 md:grid-cols-4">
-              <select
-                className="ismaili-input"
-                value={type}
-                onChange={e => setType(e.target.value)}
-              >
-                {GATHERING_TYPES.map(t => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-              <input
-                className="ismaili-input"
-                type="date"
-                value={date}
-                onChange={e => setDate(e.target.value)}
-                required
-              />
-              <input
-                className="ismaili-input md:col-span-2"
-                placeholder="Notes (optional)"
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-              />
-              <div className="md:col-span-4">
-                <button className="ismaili-button">Create Gathering</button>
-              </div>
-            </form>
-          </div>
-
-          <div className="ismaili-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="ismaili-bg-subtle">
-                  <tr>
-                    <th className="text-left p-4 font-semibold ismaili-text-primary">Date</th>
-                    <th className="text-left p-4 font-semibold ismaili-text-primary">Type</th>
-                    <th className="text-left p-4 font-semibold ismaili-text-primary">Varos</th>
-                    <th className="text-left p-4 font-semibold ismaili-text-primary">Shoe Count</th>
-                    <th className="text-left p-4 font-semibold ismaili-text-primary">Actions</th>
+      {/* Table */}
+      <div className="ismaili-card overflow-hidden">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Varos</th>
+              <th>Shoe Count</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td className="p-6 text-center text-gray-400" colSpan={5}>Loading…</td></tr>
+            ) : items.length ? (
+              items.map(g => {
+                const totalPairs = (g.shoeCount || []).reduce((s, r) => s + (Number(r.qty) || 0), 0);
+                return (
+                  <tr key={g._id}>
+                    <td className="font-medium text-gray-900">{new Date(g.date).toLocaleDateString("en-US", { timeZone: "UTC" })}</td>
+                    <td>{typeBadge(g.title)}</td>
+                    <td className="text-gray-500">{g.varos?.length ?? 0}</td>
+                    <td className="text-gray-500">{totalPairs > 0 ? totalPairs : <span className="text-gray-300">—</span>}</td>
+                    <td>
+                      <Link className="text-sm font-semibold ismaili-text-primary hover:underline" href={`/admin/gatherings/${g._id}`}>
+                        Manage →
+                      </Link>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr><td className="p-4 text-center" colSpan={5}>Loading…</td></tr>
-                  ) : items.length ? (
-                    items.map(g => {
-                      const totalPairs = (g.shoeCount || []).reduce((s, r) => s + (Number(r.qty) || 0), 0);
-                      return (
-                        <tr key={g._id} className="border-t border-gray-100 hover:bg-gray-50">
-                          <td className="p-4 font-medium">{new Date(g.date).toLocaleDateString("en-US", { timeZone: "UTC" })}</td>
-                          <td className="p-4">{typeBadge(g.title)}</td>
-                          <td className="p-4">{g.varos?.length ?? 0}</td>
-                          <td className="p-4">{totalPairs > 0 ? totalPairs : <span className="text-gray-400">—</span>}</td>
-                          <td className="p-4">
-                            <Link className="ismaili-text-primary hover:ismaili-text-secondary font-medium" href={`/admin/gatherings/${g._id}`}>
-                              Manage →
-                            </Link>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr><td className="p-4 text-center text-gray-500" colSpan={5}>No gatherings yet. Create one above.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+                );
+              })
+            ) : (
+              <tr><td className="p-6 text-center text-gray-400" colSpan={5}>No gatherings yet.</td></tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

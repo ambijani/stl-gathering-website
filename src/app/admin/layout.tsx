@@ -11,16 +11,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push("/admin/login");
   }
 
-  const isLoginPage = pathname === "/admin/login";
-  if (isLoginPage) return <>{children}</>;
+  if (pathname === "/admin/login") return <>{children}</>;
 
   const navLink = (href: string, label: string) => {
     const active = pathname.startsWith(href);
     return (
       <Link
         href={href}
-        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-          active ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"
+        className={`px-4 py-5 text-sm font-medium transition-colors border-b-2 ${
+          active
+            ? "text-white border-[#d4af37]"
+            : "text-white/70 border-transparent hover:text-white hover:border-white/30"
         }`}
       >
         {label}
@@ -30,21 +31,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <>
-      <nav className="bg-white border-b px-4 py-2 flex items-center justify-between sticky top-0 z-50">
-        <Link href="/admin" className="font-semibold text-gray-800 text-sm">
+      <nav className="sticky top-0 z-50 flex items-center justify-between px-6"
+        style={{ background: "linear-gradient(135deg,#1a3009 0%,#2d5016 100%)", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
+        <Link href="/admin" className="text-white font-bold text-base tracking-tight py-4 mr-6">
           STL Gathering
         </Link>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center">
           {navLink("/admin/people", "People")}
           {navLink("/admin/gatherings", "Gatherings")}
           {navLink("/admin/analytics", "Analytics")}
-          <button
-            onClick={logout}
-            className="ml-3 px-3 py-1 rounded text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            Logout
-          </button>
         </div>
+        <button
+          onClick={logout}
+          className="ml-auto text-white/60 hover:text-white text-sm py-4 pl-6 transition-colors"
+        >
+          Logout
+        </button>
       </nav>
       {children}
     </>
