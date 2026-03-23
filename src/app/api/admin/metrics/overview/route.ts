@@ -67,12 +67,20 @@ export async function GET() {
     ]);
 
     const shoeCountByMonth = await Gathering.aggregate([
+      // Sum shoe count per gathering
       { $unwind: "$shoeCount" },
       { $match: { "shoeCount.qty": { $gt: 0 } } },
       {
         $group: {
-          _id: { year: { $year: "$date" }, month: { $month: "$date" } },
-          total: { $sum: "$shoeCount.qty" },
+          _id: { gatheringId: "$_id", year: { $year: "$date" }, month: { $month: "$date" } },
+          gatheringTotal: { $sum: "$shoeCount.qty" },
+        },
+      },
+      // Average those totals across gatherings in the same month
+      {
+        $group: {
+          _id: { year: "$_id.year", month: "$_id.month" },
+          avg: { $avg: "$gatheringTotal" },
         },
       },
       { $sort: { "_id.year": 1, "_id.month": 1 } },
@@ -85,7 +93,7 @@ export async function GET() {
               date: { $dateFromParts: { year: "$_id.year", month: "$_id.month", day: 1 } },
             },
           },
-          total: 1,
+          avg: { $round: ["$avg", 0] },
         },
       },
     ]);

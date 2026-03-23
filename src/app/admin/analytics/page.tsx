@@ -9,7 +9,7 @@ type SignupByInterest  = { interest: string | null; count: number };
 type PairsByDate       = { date: string; pairs: number };
 type VaroFill          = { date: string; capacity: number; assigned: number };
 type VaroFrequency     = { name: string; count: number };
-type ShoeCountByMonth  = { month: string; total: number };
+type ShoeCountByMonth  = { month: string; avg: number };
 type OverviewRes = {
   signupsByInterest:  SignupByInterest[];
   pairsByDate:        PairsByDate[];
@@ -74,10 +74,10 @@ export default function Analytics() {
         )}
       </section>
 
-      {/* Shoe Count by Month */}
+      {/* Avg Shoe Count by Month */}
       <section>
-        <h2 className="text-xl font-semibold mb-1">Shoe Count by Month</h2>
-        <p className="text-sm text-gray-500 mb-3">Total shoes counted per month across all gatherings</p>
+        <h2 className="text-xl font-semibold mb-1">Average Shoe Count by Month</h2>
+        <p className="text-sm text-gray-500 mb-3">Average shoes per gathering, grouped by month</p>
         {scm.length === 0 ? <p className="text-gray-400 text-sm">No shoe count data yet.</p> : (
           <div className="w-full h-80 border rounded p-2">
             <ResponsiveContainer width="100%" height="100%">
@@ -85,8 +85,8 @@ export default function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="total" name="Shoes" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                <Tooltip formatter={(v: number) => [v, "Avg shoes"]} />
+                <Bar dataKey="avg" name="Avg shoes" fill="#4f46e5" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
