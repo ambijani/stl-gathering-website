@@ -21,10 +21,11 @@ function fmtDate(v: unknown) {
 }
 
 export default function Analytics() {
-  const [loading, setLoading] = useState(true);
-  const [pbd,  setPbd]  = useState<PairsByDate[]>([]);
-  const [freq, setFreq] = useState<VaroFrequency[]>([]);
-  const [scm,  setScm]  = useState<ShoeCountByMonth[]>([]);
+  const [loading,   setLoading]   = useState(true);
+  const [pbd,       setPbd]       = useState<PairsByDate[]>([]);
+  const [freq,      setFreq]      = useState<VaroFrequency[]>([]);
+  const [scm,       setScm]       = useState<ShoeCountByMonth[]>([]);
+  const [freqSearch, setFreqSearch] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -82,8 +83,18 @@ export default function Analytics() {
 
       {/* Varo Frequency */}
       <section>
-        <h2 className="text-xl font-semibold mb-1">Varo Frequency by Person</h2>
-        <p className="text-sm text-gray-500 mb-3">Total Varos performed across all gatherings (top {freq.length})</p>
+        <div className="flex items-end justify-between flex-wrap gap-3 mb-3">
+          <div>
+            <h2 className="text-xl font-semibold mb-1">Varo Frequency by Person</h2>
+            <p className="text-sm text-gray-500">Total Varos performed across all gatherings (top {freq.length})</p>
+          </div>
+          <input
+            className="ismaili-input text-sm w-56"
+            placeholder="Search name…"
+            value={freqSearch}
+            onChange={e => setFreqSearch(e.target.value)}
+          />
+        </div>
         {freq.length === 0 ? (
           <p className="text-gray-400 text-sm">No data yet.</p>
         ) : (
@@ -92,10 +103,36 @@ export default function Analytics() {
               <BarChart data={freq} layout="vertical" margin={{ left: 16, right: 32, top: 4, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" allowDecimals={false} />
-                <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 12 }} />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={160}
+                  tick={(props) => {
+                    const { x, y, payload } = props;
+                    const q = freqSearch.trim().toLowerCase();
+                    const match = q && payload.value.toLowerCase().includes(q);
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        dy={4}
+                        textAnchor="end"
+                        fontSize={match ? 13 : 12}
+                        fontWeight={match ? 700 : 400}
+                        fill={match ? "#d4af37" : "#4b5563"}
+                      >
+                        {payload.value}
+                      </text>
+                    );
+                  }}
+                />
                 <Tooltip />
                 <Bar dataKey="count" name="Varos performed" radius={[0, 4, 4, 0]}>
-                  {freq.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  {freq.map((entry, i) => {
+                    const q = freqSearch.trim().toLowerCase();
+                    const match = q && entry.name.toLowerCase().includes(q);
+                    return <Cell key={i} fill={match ? "#d4af37" : COLORS[i % COLORS.length]} />;
+                  })}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
