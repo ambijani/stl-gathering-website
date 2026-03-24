@@ -29,6 +29,7 @@ export default function Analytics() {
   const [scm,       setScm]       = useState<ShoeCountByMonth[]>([]);
   const [inactive,  setInactive]  = useState<InactiveMember[]>([]);
   const [freqSearch, setFreqSearch] = useState("");
+  const [inactiveAsc, setInactiveAsc] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -163,11 +164,22 @@ export default function Analytics() {
                   <thead>
                     <tr>
                       <th>Name</th>
-                      <th>Days</th>
+                      <th>
+                        <button
+                          onClick={() => setInactiveAsc(a => !a)}
+                          className="flex items-center gap-1 hover:text-gray-800 transition-colors"
+                        >
+                          Days {inactiveAsc ? "↑" : "↓"}
+                        </button>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {inactive.map((m) => {
+                    {[...inactive].sort((a, b) => {
+                      const da = a.lastVaro ? new Date(a.lastVaro).getTime() : 0;
+                      const db = b.lastVaro ? new Date(b.lastVaro).getTime() : 0;
+                      return inactiveAsc ? da - db : db - da;
+                    }).map((m) => {
                       const daysSince = m.lastVaro
                         ? Math.floor((Date.now() - new Date(m.lastVaro).getTime()) / (1000 * 60 * 60 * 24))
                         : null;
