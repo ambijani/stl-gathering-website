@@ -18,7 +18,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // public admin endpoints that MUST be reachable when not authed
-  const publicAdminApis = ["/api/admin/login", "/api/admin/health"];
+  const publicAdminApis = ["/api/admin/login"];
   const isPublicAdminApi = publicAdminApis.some((p) => pathname.startsWith(p));
 
   // login page must be public
