@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import Script from "next/script";
+import GoogleAnalytics from "./GoogleAnalytics";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,6 +33,14 @@ export default function RootLayout({
       >
         {children}
         <Analytics />
+        <GoogleAnalytics id="G-CFBBCEGPXY" />
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-CFBBCEGPXY" strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-CFBBCEGPXY');
+        `}</Script>
       </body>
     </html>
   );
