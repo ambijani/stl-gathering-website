@@ -98,7 +98,40 @@ export async function GET() {
       },
     ]);
 
-    return Response.json({ signupsByInterest, pairsByDate, varoFill, varoFrequency, shoeCountByMonth });
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const inactiveMembers = await Person.aggregate([
+      {
+        $lookup: {
+          from: "gatherings",
+          let: { personId: "$_id" },
+          pipeline: [
+            { $unwind: "$varos" },
+            { $match: { $expr: { $in: ["$$personId", "$varos.assignedPeople"] } } },
+            { $group: { _id: null, lastDate: { $max: "$date" } } },
+          ],
+          as: "assignments",
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          lastVaro: { $arrayElemAt: ["$assignments.lastDate", 0] },
+        },
+      },
+      {
+        $match: {
+          $or: [
+            { lastVaro: { $exists: false } },
+            { lastVaro: null },
+            { lastVaro: { $lt: thirtyDaysAgo } },
+          ],
+        },
+      },
+      { $sort: { lastVaro: 1 } },
+    ]);
+
+    return Response.json({ signupsByInterest, pairsByDate, varoFill, varoFrequency, shoeCountByMonth, inactiveMembers });
   } catch (error) {
     console.error("Analytics API error:", error);
     return Response.json(
