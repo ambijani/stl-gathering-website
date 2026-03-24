@@ -29,7 +29,7 @@ export default function Analytics() {
   const [scm,       setScm]       = useState<ShoeCountByMonth[]>([]);
   const [inactive,  setInactive]  = useState<InactiveMember[]>([]);
   const [freqSearch, setFreqSearch] = useState("");
-  const [inactiveAsc, setInactiveAsc] = useState(true);
+  const [inactiveAsc, setInactiveAsc] = useState(false);
 
   useEffect(() => {
     (async () => {
