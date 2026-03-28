@@ -30,7 +30,32 @@ export default function GatheringDetail() {
   const { id } = useParams<{ id: string }>();
   const [g, setG] = useState<Gathering | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
-  const [tab, setTab] = useState<"varos" | "matrix" | "shoes">("varos");
+  const [tab, setTab] = useState<"varos" | "matrix" | "shoes" | "photos">("varos");
+
+  type Photo = { _id: string; filename: string; contentType: string };
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photoUploading, setPhotoUploading] = useState(false);
+
+  const loadPhotos = useCallback(async () => {
+    const res = await fetch(`/api/admin/gatherings/${id}/photos`);
+    if (res.ok) setPhotos(await res.json());
+  }, [id]);
+
+  async function uploadPhoto(file: File) {
+    setPhotoUploading(true);
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`/api/admin/gatherings/${id}/photos`, { method: "POST", body: form });
+    if (res.ok) await loadPhotos();
+    else alert("Upload failed.");
+    setPhotoUploading(false);
+  }
+
+  async function deletePhoto(photoId: string, filename: string) {
+    if (!confirm(`Delete "${filename}"?`)) return;
+    await fetch(`/api/admin/gatherings/${id}/photos/${photoId}`, { method: "DELETE" });
+    await loadPhotos();
+  }
 
   const loadGathering = useCallback(async () => {
     const res = await fetch(`/api/admin/gatherings/${id}`);
@@ -40,7 +65,8 @@ export default function GatheringDetail() {
   useEffect(() => {
     void loadGathering();
     fetch("/api/admin/people").then(r => r.json()).then(setPeople);
-  }, [loadGathering]);
+    void loadPhotos();
+  }, [loadGathering, loadPhotos]);
 
   async function deleteVaro(varoId: string) {
     if (!confirm("Delete this Varo?")) return;
@@ -241,14 +267,14 @@ export default function GatheringDetail() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b">
-        {(["varos","matrix","shoes"] as const).map(t => (
+        {(["varos","matrix","shoes","photos"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors capitalize ${
               tab === t
                 ? "border-[#2d5016] text-[#2d5016]"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}>
-            {t === "shoes" ? "Shoe Count" : t.charAt(0).toUpperCase() + t.slice(1)}
+            {t === "shoes" ? "Shoe Count" : t === "photos" ? "Jamati Picture" : t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
       </div>
@@ -465,6 +491,67 @@ export default function GatheringDetail() {
               </div>
               <p className="text-xs text-gray-400">Changes are not saved until you click Save All.</p>
             </>
+          )}
+        </div>
+      )}
+
+      {/* ── Jamati Picture tab ── */}
+      {tab === "photos" && (
+        <div className="space-y-4">
+          {/* Upload area */}
+          <label className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${photoUploading ? "border-gray-200 bg-gray-50" : "border-gray-300 hover:border-green-400 hover:bg-green-50"}`}>
+            <input
+              type="file"
+              className="hidden"
+              accept="*/*"
+              multiple
+              disabled={photoUploading}
+              onChange={async e => {
+                const files = Array.from(e.target.files ?? []);
+                for (const file of files) await uploadPhoto(file);
+                e.target.value = "";
+              }}
+            />
+            {photoUploading ? (
+              <p className="text-sm text-gray-400">Uploading…</p>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-gray-600">Click to upload files</p>
+                <p className="text-xs text-gray-400 mt-1">Images, videos, PDFs — any file type</p>
+              </>
+            )}
+          </label>
+
+          {/* File list */}
+          {photos.length === 0 ? (
+            <p className="text-sm text-gray-400">No files uploaded yet.</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {photos.map(p => {
+                const isImage = p.contentType.startsWith("image/");
+                const src = `/api/admin/gatherings/${id}/photos/${p._id}`;
+                return (
+                  <div key={p._id} className="ismaili-card p-2 flex flex-col gap-2">
+                    {isImage ? (
+                      <a href={src} target="_blank" rel="noreferrer">
+                        <img src={src} alt={p.filename} className="w-full h-32 object-cover rounded" />
+                      </a>
+                    ) : (
+                      <a href={src} target="_blank" rel="noreferrer" className="flex items-center justify-center h-32 bg-gray-50 rounded text-3xl">
+                        📄
+                      </a>
+                    )}
+                    <p className="text-xs text-gray-500 truncate" title={p.filename}>{p.filename}</p>
+                    <button
+                      onClick={() => deletePhoto(p._id, p.filename)}
+                      className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors text-left"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       )}

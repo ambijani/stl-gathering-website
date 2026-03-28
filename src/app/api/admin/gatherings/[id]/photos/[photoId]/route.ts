@@ -1,0 +1,39 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+import { requireAdmin } from "@/app/api/_auth";
+import connect from "@/lib/mongo";
+import Photo from "@/models/Photo";
+import Gathering from "@/models/Gathering";
+
+export async function GET(req: Request, { params }: { params: Promise<{ id: string; photoId: string }> }) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
+  const { photoId } = await params;
+  await connect();
+
+  const photo = await Photo.findById(photoId).lean() as { data: { buffer: ArrayBuffer }; contentType: string; filename: string } | null;
+  if (!photo) return new Response("Not found", { status: 404 });
+
+  return new Response(photo.data.buffer, {
+    headers: {
+      "Content-Type": photo.contentType,
+      "Content-Disposition": `inline; filename="${photo.filename}"`,
+      "Cache-Control": "private, max-age=3600",
+    },
+  });
+}
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string; photoId: string }> }) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
+  const { id, photoId } = await params;
+  await connect();
+
+  await Photo.findByIdAndDelete(photoId);
+  await Gathering.findByIdAndUpdate(id, { $pull: { photos: { _id: photoId } } });
+
+  return new Response(null, { status: 204 });
+}
