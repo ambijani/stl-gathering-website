@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { requireAdmin } from "@/app/api/_auth";
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/next";
+import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 
 export async function POST(req: Request) {
   const authError = await requireAdmin();
