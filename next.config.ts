@@ -11,8 +11,8 @@ const nextConfig = {
               default-src 'self';
               script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://*.vercel-insights.com;
               style-src 'self' 'unsafe-inline';
-              img-src 'self' data: blob:;
-              connect-src 'self' https://*.mongodb.net https://api.vercel.com https://*.vercel-insights.com;
+              img-src 'self' data: blob: https://*.vercel-blob.com https://vercel.com;
+              connect-src 'self' https://*.mongodb.net https://api.vercel.com https://*.vercel-insights.com https://*.vercel-blob.com https://vercel.com;
               frame-src https://challenges.cloudflare.com;
               object-src 'none';
               base-uri 'self';
