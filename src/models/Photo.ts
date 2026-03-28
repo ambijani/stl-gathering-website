@@ -5,7 +5,7 @@ const PhotoSchema = new Schema(
     gatheringId: { type: Schema.Types.ObjectId, ref: "Gathering", required: true, index: true },
     filename: { type: String, required: true },
     contentType: { type: String, required: true },
-    data: { type: Buffer, required: true },
+    url: { type: String, required: true },
   },
   { timestamps: true }
 );

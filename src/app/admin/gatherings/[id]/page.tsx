@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 
 type Person = { _id: string; name: string; email?: string; interests?: string[] };
 type Varo = { _id: string; title: string; assignedPeople?: string[] };
@@ -32,7 +33,7 @@ export default function GatheringDetail() {
   const [people, setPeople] = useState<Person[]>([]);
   const [tab, setTab] = useState<"varos" | "matrix" | "shoes" | "photos">("varos");
 
-  type Photo = { _id: string; filename: string; contentType: string };
+  type Photo = { _id: string; filename: string; contentType: string; url: string };
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [photoUploading, setPhotoUploading] = useState(false);
 
@@ -43,11 +44,20 @@ export default function GatheringDetail() {
 
   async function uploadPhoto(file: File) {
     setPhotoUploading(true);
-    const form = new FormData();
-    form.append("file", file);
-    const res = await fetch(`/api/admin/gatherings/${id}/photos`, { method: "POST", body: form });
-    if (res.ok) await loadPhotos();
-    else alert("Upload failed.");
+    try {
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: `/api/admin/gatherings/${id}/photos/upload`,
+      });
+      await fetch(`/api/admin/gatherings/${id}/photos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: blob.url, filename: file.name, contentType: file.type }),
+      });
+      await loadPhotos();
+    } catch {
+      alert("Upload failed.");
+    }
     setPhotoUploading(false);
   }
 
@@ -529,7 +539,7 @@ export default function GatheringDetail() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {photos.map(p => {
                 const isImage = p.contentType.startsWith("image/");
-                const src = `/api/admin/gatherings/${id}/photos/${p._id}`;
+                const src = p.url;
                 return (
                   <div key={p._id} className="ismaili-card p-2 flex flex-col gap-2">
                     {isImage ? (

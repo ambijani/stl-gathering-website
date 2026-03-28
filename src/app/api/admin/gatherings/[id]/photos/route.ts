@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 import { requireAdmin } from "@/app/api/_auth";
 import connect from "@/lib/mongo";
 import Photo from "@/models/Photo";
-import Gathering from "@/models/Gathering";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const authError = await requireAdmin();
@@ -13,7 +12,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   await connect();
 
-  const photos = await Photo.find({ gatheringId: id }).select("filename contentType createdAt").lean();
+  const photos = await Photo.find({ gatheringId: id }).select("filename contentType url createdAt").lean();
   return Response.json(photos);
 }
 
@@ -22,22 +21,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (authError) return authError;
 
   const { id } = await params;
-  const formData = await req.formData();
-  const file = formData.get("file") as File | null;
-  if (!file) return Response.json({ error: "No file" }, { status: 400 });
+  const { url, filename, contentType } = await req.json() as { url: string; filename: string; contentType: string };
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  if (!url || !filename) return Response.json({ error: "Missing fields" }, { status: 400 });
 
   await connect();
-  const photo = await Photo.create({
-    gatheringId: id,
-    filename: file.name,
-    contentType: file.type || "application/octet-stream",
-    data: buffer,
-  });
+  const photo = await Photo.create({ gatheringId: id, filename, contentType: contentType || "application/octet-stream", url });
 
-  // Store reference on the gathering
-  await Gathering.findByIdAndUpdate(id, { $push: { photos: { _id: photo._id } } });
-
-  return Response.json({ _id: photo._id, filename: photo.filename, contentType: photo.contentType }, { status: 201 });
+  return Response.json(photo, { status: 201 });
 }
