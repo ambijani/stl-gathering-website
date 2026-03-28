@@ -69,6 +69,9 @@ export default function GatheringDetail() {
   const [assignOpenFor, setAssignOpenFor] = useState<string | null>(null);
   const [peopleSearch, setPeopleSearch] = useState("");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [addingNew, setAddingNew] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [addingLoading, setAddingLoading] = useState(false);
 
   const currentVaro = useMemo(
     () => g?.varos.find(v => v._id === assignOpenFor) ?? null,
@@ -83,12 +86,34 @@ export default function GatheringDetail() {
   function openAssign(varoId: string) {
     const varo = g?.varos.find(v => v._id === varoId);
     if (!varo) return;
-    // Pre-check anyone already assigned
     const initial: Record<string, boolean> = {};
     for (const pid of varo.assignedPeople ?? []) initial[pid] = true;
     setSelected(initial);
     setPeopleSearch("");
+    setAddingNew(false);
+    setNewName("");
     setAssignOpenFor(varoId);
+  }
+
+  async function createAndSelect() {
+    const name = newName.trim();
+    if (!name) return;
+    setAddingLoading(true);
+    const res = await fetch("/api/admin/people", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    if (res.ok) {
+      const created: Person = await res.json();
+      setPeople(prev => [...prev, created]);
+      setSelected(s => ({ ...s, [created._id]: true }));
+      setAddingNew(false);
+      setNewName("");
+    } else {
+      alert("Failed to create person.");
+    }
+    setAddingLoading(false);
   }
 
   async function saveAssignment() {
@@ -331,6 +356,37 @@ export default function GatheringDetail() {
               {!filteredPeople.length && (
                 <p className="py-4 text-sm text-gray-400 text-center">No matches</p>
               )}
+
+              {/* Add new person */}
+              <div className="py-3 -mx-4 px-4">
+                {addingNew ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      autoFocus
+                      className="border p-1.5 rounded text-sm flex-1"
+                      placeholder="Full name…"
+                      value={newName}
+                      onChange={e => setNewName(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") void createAndSelect(); if (e.key === "Escape") { setAddingNew(false); setNewName(""); } }}
+                    />
+                    <button
+                      onClick={() => void createAndSelect()}
+                      disabled={!newName.trim() || addingLoading}
+                      className="px-3 py-1.5 rounded bg-green-800 text-white text-xs font-semibold disabled:opacity-50 hover:bg-green-900 transition-colors"
+                    >
+                      {addingLoading ? "Adding…" : "Add & Select"}
+                    </button>
+                    <button onClick={() => { setAddingNew(false); setNewName(""); }} className="text-gray-400 hover:text-gray-600 text-sm">✕</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setAddingNew(true)}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                  >
+                    + Add new person
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Footer */}

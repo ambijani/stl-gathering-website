@@ -13,3 +13,15 @@ export async function GET() {
   const rows = await Person.find().sort({ name: 1 }).lean();
   return Response.json(rows);
 }
+
+export async function POST(req: Request) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
+  const { name } = await req.json() as { name?: string };
+  if (!name?.trim()) return Response.json({ error: "Name required" }, { status: 400 });
+
+  await connect();
+  const person = await Person.create({ name: name.trim() });
+  return Response.json(person, { status: 201 });
+}
