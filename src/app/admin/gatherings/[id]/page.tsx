@@ -32,7 +32,7 @@ export default function GatheringDetail() {
   const [people, setPeople] = useState<Person[]>([]);
   const [tab, setTab] = useState<"varos" | "matrix" | "shoes" | "photos">("varos");
 
-  type Photo = { _id: string; filename: string; contentType: string; url: string };
+  type Photo = { _id: string; filename: string; contentType: string };
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [photoUploading, setPhotoUploading] = useState(false);
 
@@ -44,14 +44,9 @@ export default function GatheringDetail() {
   async function uploadPhoto(file: File) {
     setPhotoUploading(true);
     try {
-      const res = await fetch(
-        `/api/admin/gatherings/${id}/photos?filename=${encodeURIComponent(file.name)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": file.type || "application/octet-stream" },
-          body: file,
-        }
-      );
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`/api/admin/gatherings/${id}/photos`, { method: "POST", body: form });
       if (!res.ok) throw new Error("Upload failed");
       await loadPhotos();
     } catch {

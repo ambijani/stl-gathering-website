@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 import { requireAdmin } from "@/app/api/_auth";
 import connect from "@/lib/mongo";
 import Photo from "@/models/Photo";
-import { put } from "@vercel/blob";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const authError = await requireAdmin();
@@ -13,7 +12,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   await connect();
 
-  const photos = await Photo.find({ gatheringId: id }).select("filename contentType url createdAt").lean();
+  const photos = await Photo.find({ gatheringId: id }).select("filename contentType createdAt").lean();
   return Response.json(photos);
 }
 
@@ -23,21 +22,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   try {
     const { id } = await params;
-    const filename = new URL(req.url).searchParams.get("filename") ?? "upload";
-    const contentType = req.headers.get("content-type") ?? "application/octet-stream";
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+    if (!file) return Response.json({ error: "No file" }, { status: 400 });
 
-    const fileBlob = await req.blob();
-    if (!fileBlob || fileBlob.size === 0) return Response.json({ error: "No file body" }, { status: 400 });
-
-    const blob = await put(`gatherings/${id}/${Date.now()}-${filename}`, fileBlob, {
-      access: "private",
-      contentType,
-    });
+    const buffer = Buffer.from(await file.arrayBuffer());
 
     await connect();
-    const photo = await Photo.create({ gatheringId: id, filename, contentType, url: blob.url });
+    const photo = await Photo.create({
+      gatheringId: id,
+      filename: file.name,
+      contentType: file.type || "application/octet-stream",
+      data: buffer,
+    });
 
-    return Response.json(photo, { status: 201 });
+    return Response.json({ _id: photo._id, filename: photo.filename, contentType: photo.contentType }, { status: 201 });
   } catch (err) {
     console.error("Photo upload error:", err);
     return Response.json({ error: err instanceof Error ? err.message : "Upload failed" }, { status: 500 });
