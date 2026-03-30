@@ -25,7 +25,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     return new Response(buf, {
       headers: {
         "Content-Type": photo.contentType,
-        "Content-Disposition": `inline; filename="${photo.filename}"`,
+        "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(photo.filename)}`,
         "Cache-Control": "private, max-age=3600",
       },
     });
