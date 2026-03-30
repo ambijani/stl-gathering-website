@@ -12,10 +12,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { photoId } = await params;
   await connect();
 
-  const photo = await Photo.findById(photoId).lean() as { data: Buffer; contentType: string; filename: string } | null;
+  const photo = await Photo.findById(photoId).select("data contentType filename");
   if (!photo) return new Response("Not found", { status: 404 });
 
-  return new Response(photo.data.buffer as ArrayBuffer, {
+  return new Response(photo.data as unknown as ArrayBuffer, {
     headers: {
       "Content-Type": photo.contentType,
       "Content-Disposition": `inline; filename="${photo.filename}"`,
