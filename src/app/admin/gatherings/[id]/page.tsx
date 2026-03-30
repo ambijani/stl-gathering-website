@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { upload } from "@vercel/blob/client";
 
 type Person = { _id: string; name: string; email?: string; interests?: string[] };
 type Varo = { _id: string; title: string; assignedPeople?: string[] };
@@ -45,15 +44,15 @@ export default function GatheringDetail() {
   async function uploadPhoto(file: File) {
     setPhotoUploading(true);
     try {
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: `/api/admin/gatherings/${id}/photos/upload`,
-      });
-      await fetch(`/api/admin/gatherings/${id}/photos`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: blob.url, filename: file.name, contentType: file.type }),
-      });
+      const res = await fetch(
+        `/api/admin/gatherings/${id}/photos?filename=${encodeURIComponent(file.name)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": file.type || "application/octet-stream" },
+          body: file,
+        }
+      );
+      if (!res.ok) throw new Error("Upload failed");
       await loadPhotos();
     } catch {
       alert("Upload failed.");

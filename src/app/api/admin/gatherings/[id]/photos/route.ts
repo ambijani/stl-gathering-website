@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { requireAdmin } from "@/app/api/_auth";
 import connect from "@/lib/mongo";
 import Photo from "@/models/Photo";
+import { put } from "@vercel/blob";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const authError = await requireAdmin();
@@ -21,12 +22,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (authError) return authError;
 
   const { id } = await params;
-  const { url, filename, contentType } = await req.json() as { url: string; filename: string; contentType: string };
+  const filename = new URL(req.url).searchParams.get("filename") ?? "upload";
+  const contentType = req.headers.get("content-type") ?? "application/octet-stream";
 
-  if (!url || !filename) return Response.json({ error: "Missing fields" }, { status: 400 });
+  if (!req.body) return Response.json({ error: "No file body" }, { status: 400 });
+
+  const blob = await put(`gatherings/${id}/${Date.now()}-${filename}`, req.body, {
+    access: "public",
+    contentType,
+  });
 
   await connect();
-  const photo = await Photo.create({ gatheringId: id, filename, contentType: contentType || "application/octet-stream", url });
+  const photo = await Photo.create({ gatheringId: id, filename, contentType, url: blob.url });
 
   return Response.json(photo, { status: 201 });
 }
