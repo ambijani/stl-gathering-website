@@ -35,6 +35,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string; photoId: string }> }) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
+  const { photoId } = await params;
+  const { filename } = await req.json() as { filename?: string };
+  if (!filename?.trim()) return Response.json({ error: "Filename required" }, { status: 400 });
+
+  await connect();
+  const photo = await Photo.findByIdAndUpdate(photoId, { filename: filename.trim() }, { new: true }).select("filename");
+  if (!photo) return new Response("Not found", { status: 404 });
+
+  return Response.json({ filename: photo.filename });
+}
+
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string; photoId: string }> }) {
   const authError = await requireAdmin();
   if (authError) return authError;

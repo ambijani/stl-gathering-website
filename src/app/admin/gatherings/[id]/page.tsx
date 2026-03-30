@@ -35,6 +35,8 @@ export default function GatheringDetail() {
   type Photo = { _id: string; filename: string; contentType: string };
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
 
   const loadPhotos = useCallback(async () => {
     const res = await fetch(`/api/admin/gatherings/${id}/photos`);
@@ -53,6 +55,18 @@ export default function GatheringDetail() {
       alert("Upload failed.");
     }
     setPhotoUploading(false);
+  }
+
+  async function renamePhoto(photoId: string) {
+    const name = renameValue.trim();
+    if (!name) return;
+    const res = await fetch(`/api/admin/gatherings/${id}/photos/${photoId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: name }),
+    });
+    if (res.ok) { setRenamingId(null); await loadPhotos(); }
+    else alert("Rename failed.");
   }
 
   async function deletePhoto(photoId: string, filename: string) {
@@ -545,13 +559,35 @@ export default function GatheringDetail() {
                         📄
                       </a>
                     )}
-                    <p className="text-xs text-gray-500 truncate" title={p.filename}>{p.filename}</p>
-                    <button
-                      onClick={() => deletePhoto(p._id, p.filename)}
-                      className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors text-left"
-                    >
-                      Delete
-                    </button>
+                    {renamingId === p._id ? (
+                      <div className="flex gap-1 items-center">
+                        <input
+                          autoFocus
+                          className="border rounded px-1.5 py-0.5 text-xs flex-1 min-w-0"
+                          value={renameValue}
+                          onChange={e => setRenameValue(e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter") void renamePhoto(p._id); if (e.key === "Escape") setRenamingId(null); }}
+                        />
+                        <button onClick={() => void renamePhoto(p._id)} className="text-xs font-semibold text-green-800 hover:text-green-900">✓</button>
+                        <button onClick={() => setRenamingId(null)} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500 truncate cursor-pointer hover:text-gray-800" title={p.filename} onClick={() => { setRenamingId(p._id); setRenameValue(p.filename); }}>{p.filename}</p>
+                    )}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => { setRenamingId(p._id); setRenameValue(p.filename); }}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      >
+                        Rename
+                      </button>
+                      <button
+                        onClick={() => deletePhoto(p._id, p.filename)}
+                        className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 );
               })}
