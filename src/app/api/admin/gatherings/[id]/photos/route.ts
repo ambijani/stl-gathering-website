@@ -30,7 +30,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (!fileBlob || fileBlob.size === 0) return Response.json({ error: "No file body" }, { status: 400 });
 
     const blob = await put(`gatherings/${id}/${Date.now()}-${filename}`, fileBlob, {
-      access: "public",
+      access: "private",
       contentType,
     });
 

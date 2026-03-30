@@ -538,7 +538,7 @@ export default function GatheringDetail() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {photos.map(p => {
                 const isImage = p.contentType.startsWith("image/");
-                const src = p.url;
+                const src = `/api/admin/gatherings/${id}/photos/${p._id}`;
                 return (
                   <div key={p._id} className="ismaili-card p-2 flex flex-col gap-2">
                     {isImage ? (
