@@ -21,19 +21,25 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const authError = await requireAdmin();
   if (authError) return authError;
 
-  const { id } = await params;
-  const filename = new URL(req.url).searchParams.get("filename") ?? "upload";
-  const contentType = req.headers.get("content-type") ?? "application/octet-stream";
+  try {
+    const { id } = await params;
+    const filename = new URL(req.url).searchParams.get("filename") ?? "upload";
+    const contentType = req.headers.get("content-type") ?? "application/octet-stream";
 
-  if (!req.body) return Response.json({ error: "No file body" }, { status: 400 });
+    const fileBlob = await req.blob();
+    if (!fileBlob || fileBlob.size === 0) return Response.json({ error: "No file body" }, { status: 400 });
 
-  const blob = await put(`gatherings/${id}/${Date.now()}-${filename}`, req.body, {
-    access: "public",
-    contentType,
-  });
+    const blob = await put(`gatherings/${id}/${Date.now()}-${filename}`, fileBlob, {
+      access: "public",
+      contentType,
+    });
 
-  await connect();
-  const photo = await Photo.create({ gatheringId: id, filename, contentType, url: blob.url });
+    await connect();
+    const photo = await Photo.create({ gatheringId: id, filename, contentType, url: blob.url });
 
-  return Response.json(photo, { status: 201 });
+    return Response.json(photo, { status: 201 });
+  } catch (err) {
+    console.error("Photo upload error:", err);
+    return Response.json({ error: err instanceof Error ? err.message : "Upload failed" }, { status: 500 });
+  }
 }
