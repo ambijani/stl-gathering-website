@@ -12,16 +12,27 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { photoId } = await params;
   await connect();
 
-  const photo = await Photo.findById(photoId).select("data contentType filename");
-  if (!photo) return new Response("Not found", { status: 404 });
+  try {
+    const photo = await Photo.findById(photoId).select("data contentType filename");
+    if (!photo) return new Response("Not found", { status: 404 });
 
-  return new Response(photo.data as unknown as ArrayBuffer, {
-    headers: {
-      "Content-Type": photo.contentType,
-      "Content-Disposition": `inline; filename="${photo.filename}"`,
-      "Cache-Control": "private, max-age=3600",
-    },
-  });
+    console.log("photo.data type:", typeof photo.data, photo.data?.constructor?.name);
+
+    const buf = Buffer.isBuffer(photo.data)
+      ? photo.data
+      : Buffer.from(photo.data as unknown as ArrayBuffer);
+
+    return new Response(buf, {
+      headers: {
+        "Content-Type": photo.contentType,
+        "Content-Disposition": `inline; filename="${photo.filename}"`,
+        "Cache-Control": "private, max-age=3600",
+      },
+    });
+  } catch (err) {
+    console.error("Photo GET error:", err);
+    return Response.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 500 });
+  }
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string; photoId: string }> }) {
