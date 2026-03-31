@@ -1,6 +1,15 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Script from "next/script";
+
+declare global {
+  interface Window {
+    grecaptcha: { execute: (key: string, opts: { action: string }) => Promise<string>; ready: (cb: () => void) => void };
+  }
+}
+
+const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
 
 const VARO_OPTIONS = [
   "1st Dua",
@@ -25,6 +34,7 @@ export default function Signup() {
   const [open, setOpen] = useState(false);
   const [ok, setOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   function update(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -38,34 +48,43 @@ export default function Signup() {
     });
   }
 
-  const WHATSAPP_URL = "https://chat.whatsapp.com/FP9Va30V5XoG4bLYgd4jdl?mode=gi_t";
-
-  async function submit(joinWhatsApp: boolean) {
-    setError(null);
-    const interests = [
-      ...Array.from(selected),
-      ...(otherChecked && otherText.trim() ? [otherText.trim()] : []),
-    ];
-    const res = await fetch("/api/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, interests }),
-    });
-    if (res.ok) {
-      if (joinWhatsApp) {
-        window.location.href = WHATSAPP_URL;
-      } else {
-        setOk(true);
-      }
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Something went wrong. Please try again.");
-    }
-  }
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await submit(true);
+    setError(null);
+    setSubmitting(true);
+    try {
+      let recaptchaToken: string | undefined;
+      if (SITE_KEY && window.grecaptcha) {
+        recaptchaToken = await new Promise<string>(resolve =>
+          window.grecaptcha.ready(async () => resolve(await window.grecaptcha.execute(SITE_KEY, { action: "submit" })))
+        );
+      }
+
+      const interests = [
+        ...Array.from(selected),
+        ...(otherChecked && otherText.trim() ? [otherText.trim()] : []),
+      ];
+
+      const res = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, interests, recaptchaToken }),
+      });
+
+      if (res.ok) {
+        const data = await res.json() as { whatsappUrl?: string };
+        if (data.whatsappUrl) {
+          window.location.href = data.whatsappUrl;
+        } else {
+          setOk(true);
+        }
+      } else {
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        setError(data.error ?? "Something went wrong. Please try again.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (ok) return (
@@ -80,6 +99,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen ismaili-bg-pattern">
+      {SITE_KEY && <Script src={`https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`} strategy="afterInteractive" />}
       <div className="ismaili-header">
         <div className="container mx-auto px-4 flex items-start justify-between">
           <div>
@@ -189,8 +209,8 @@ export default function Signup() {
               {error && (
                 <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">{error}</p>
               )}
-              <button type="submit" className="ismaili-button w-full text-lg py-3">
-                Join Our Community
+              <button type="submit" disabled={submitting} className="ismaili-button w-full text-lg py-3 disabled:opacity-60">
+                {submitting ? "Submitting…" : "Join Our Community"}
               </button>
             </form>
           </div>

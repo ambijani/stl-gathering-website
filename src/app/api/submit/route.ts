@@ -10,7 +10,21 @@ const schema = z.object({
   phone: z.string().max(32).optional().or(z.literal("")),
   interests: z.array(z.string()).max(50).optional(),
   availability: z.string().max(1000).optional().or(z.literal("")),
+  recaptchaToken: z.string().optional(),
 });
+
+async function verifyRecaptcha(token: string): Promise<boolean> {
+  const secret = process.env.RECAPTCHA_SECRET_KEY;
+  if (!secret) return true; // skip verification if not configured
+
+  const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `secret=${secret}&response=${token}`,
+  });
+  const data = await res.json() as { success: boolean; score: number; action: string };
+  return data.success && data.score >= 0.5;
+}
 
 export async function POST(req: Request) {
   try {
@@ -24,8 +38,15 @@ export async function POST(req: Request) {
       return Response.json({ error: "Invalid input", issues: parsed.error.issues }, { status: 400 });
     }
 
-    const doc = await Person.create(parsed.data);
-    return Response.json({ ok: true, id: doc._id });
+    const { recaptchaToken, ...data } = parsed.data;
+
+    if (recaptchaToken) {
+      const valid = await verifyRecaptcha(recaptchaToken);
+      if (!valid) return Response.json({ error: "Bot protection check failed. Please try again." }, { status: 403 });
+    }
+
+    const doc = await Person.create(data);
+    return Response.json({ ok: true, id: doc._id, whatsappUrl: process.env.WHATSAPP_URL ?? null });
   } catch (error) {
     console.error("Submit API error:", error);
     return Response.json(
