@@ -41,8 +41,9 @@ export default function Analytics() {
   const [reportYear,    setReportYear]    = useState(lastMonthYear);
   const [reportData,    setReportData]    = useState<ReportData | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
-  const [sending,       setSending]       = useState(false);
-  const [sendStatus,    setSendStatus]    = useState<{ ok: boolean; msg: string } | null>(null);
+  const [sending,          setSending]          = useState(false);
+  const [sendStatus,       setSendStatus]       = useState<{ ok: boolean; msg: string } | null>(null);
+  const [extraRecipients,  setExtraRecipients]  = useState("");
 
   const loadReport = useCallback(async (month: number, year: number) => {
     setReportLoading(true);
@@ -61,7 +62,11 @@ export default function Analytics() {
     const res  = await fetch("/api/admin/report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ month: reportMonth, year: reportYear }),
+      body: JSON.stringify({
+        month: reportMonth,
+        year: reportYear,
+        extraRecipients: extraRecipients.split(",").map(e => e.trim()).filter(Boolean),
+      }),
     });
     const data = await res.json();
     setSendStatus(res.ok ? { ok: true, msg: `Report sent for ${data.monthLabel}` } : { ok: false, msg: data.error ?? "Failed to send" });
@@ -248,7 +253,7 @@ export default function Analytics() {
         <h2 className="text-xl font-semibold mb-1">Monthly Email Report</h2>
         <p className="text-sm text-gray-500 mb-4">Preview and send the report to configured recipients. Sends automatically on the 1st of each month.</p>
 
-        <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <div className="flex items-center gap-3 mb-3 flex-wrap">
           <select
             className="ismaili-input text-sm w-40"
             value={reportMonth}
@@ -266,8 +271,16 @@ export default function Analytics() {
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
+        </div>
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          <input
+            className="ismaili-input text-sm flex-1 min-w-60"
+            placeholder="Extra recipients (comma-separated emails)"
+            value={extraRecipients}
+            onChange={e => setExtraRecipients(e.target.value)}
+          />
           <button
-            className="ismaili-btn text-sm"
+            className="ismaili-btn text-sm shrink-0"
             onClick={handleSendReport}
             disabled={sending || reportLoading}
           >
@@ -297,7 +310,6 @@ export default function Analytics() {
                     <th>Gathering</th>
                     <th>Date</th>
                     <th className="text-center">Shoe Pairs</th>
-                    <th>Breakdown</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -308,17 +320,15 @@ export default function Analytics() {
                         {new Date(g.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" })}
                       </td>
                       <td className="text-center font-semibold">{g.totalShoes}</td>
-                      <td className="text-gray-400 text-xs">
-                        {g.shoeBreakdown.length ? g.shoeBreakdown.map(s => `${s.size}: ${s.qty}`).join(", ") : "—"}
-                      </td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr className="bg-gray-50 font-semibold">
-                    <td colSpan={2}>Total</td>
-                    <td className="text-center">{reportData.gatherings.reduce((s, g) => s + g.totalShoes, 0)}</td>
-                    <td />
+                    <td colSpan={2}>Avg per gathering</td>
+                    <td className="text-center">
+                      {(reportData.gatherings.reduce((s, g) => s + g.totalShoes, 0) / reportData.gatherings.length).toFixed(1)}
+                    </td>
                   </tr>
                 </tfoot>
               </table>

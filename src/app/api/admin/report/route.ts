@@ -19,11 +19,11 @@ export async function GET(req: Request) {
   }
 }
 
-// POST /api/admin/report  body: { month: number, year: number } → send email
+// POST /api/admin/report  body: { month: number, year: number, extraRecipients?: string[] } → send email
 export async function POST(req: Request) {
   try {
-    const { month, year } = await req.json();
-    const result = await sendReport(Number(month), Number(year));
+    const { month, year, extraRecipients } = await req.json();
+    const result = await sendReport(Number(month), Number(year), extraRecipients ?? []);
     return Response.json({ ok: true, ...result });
   } catch (error) {
     return Response.json(

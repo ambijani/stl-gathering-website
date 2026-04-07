@@ -6,20 +6,18 @@ import { fetchReportData, ReportGathering } from "@/lib/reportData";
 
 export function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]) {
   const rows = gatherings.map(g => {
-    const dateStr   = new Date(g.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-    const breakdown = g.shoeBreakdown.length
-      ? g.shoeBreakdown.map(s => `${s.size}: ${s.qty}`).join(", ")
-      : "No data";
+    const dateStr = new Date(g.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
     return `
       <tr>
         <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;">${g.title || "Gathering"}</td>
         <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;">${dateStr}</td>
         <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">${g.totalShoes}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:13px;">${breakdown}</td>
       </tr>`;
   }).join("");
 
-  const totalShoes = gatherings.reduce((sum, g) => sum + g.totalShoes, 0);
+  const avg = gatherings.length
+    ? (gatherings.reduce((sum, g) => sum + g.totalShoes, 0) / gatherings.length).toFixed(1)
+    : "0";
 
   return `
 <!DOCTYPE html>
@@ -39,15 +37,13 @@ export function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]
             <th style="padding:10px 12px;text-align:left;color:#374151;font-weight:600;">Gathering</th>
             <th style="padding:10px 12px;text-align:left;color:#374151;font-weight:600;">Date</th>
             <th style="padding:10px 12px;text-align:center;color:#374151;font-weight:600;">Shoe Pairs</th>
-            <th style="padding:10px 12px;text-align:left;color:#374151;font-weight:600;">Breakdown</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
         <tfoot>
           <tr style="background:#f9fafb;">
-            <td colspan="2" style="padding:10px 12px;font-weight:600;color:#374151;">Total</td>
-            <td style="padding:10px 12px;text-align:center;font-weight:600;color:#374151;">${totalShoes}</td>
-            <td></td>
+            <td colspan="2" style="padding:10px 12px;font-weight:600;color:#374151;">Avg per gathering</td>
+            <td style="padding:10px 12px;text-align:center;font-weight:600;color:#374151;">${avg}</td>
           </tr>
         </tfoot>
       </table>
@@ -61,11 +57,12 @@ export function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]
 </html>`;
 }
 
-export async function sendReport(month: number, year: number) {
+export async function sendReport(month: number, year: number, extraRecipients: string[] = []) {
   const { monthLabel, gatherings } = await fetchReportData(month, year);
   const html = buildEmailHtml(monthLabel, gatherings);
 
-  const recipients = (process.env.REPORT_RECIPIENTS ?? "").split(",").map(e => e.trim()).filter(Boolean);
+  const defaultRecipients = (process.env.REPORT_RECIPIENTS ?? "").split(",").map(e => e.trim()).filter(Boolean);
+  const recipients = [...new Set([...defaultRecipients, ...extraRecipients])];
   if (recipients.length === 0) throw new Error("No REPORT_RECIPIENTS configured");
 
   const transporter = nodemailer.createTransport({
