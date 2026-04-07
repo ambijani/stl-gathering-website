@@ -62,7 +62,7 @@ export async function sendReport(month: number, year: number, extraRecipients: s
   const html = buildEmailHtml(monthLabel, gatherings);
 
   const defaultRecipients = (process.env.REPORT_RECIPIENTS ?? "").split(",").map(e => e.trim()).filter(Boolean);
-  const recipients = [...new Set([...defaultRecipients, ...extraRecipients])];
+  const recipients = extraRecipients.length > 0 ? extraRecipients : defaultRecipients;
   if (recipients.length === 0) throw new Error("No REPORT_RECIPIENTS configured");
 
   const transporter = nodemailer.createTransport({
