@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
   BarChart, Bar, ResponsiveContainer, Cell,
@@ -8,7 +8,9 @@ import {
 type PairsByDate      = { date: string; pairs: number };
 type VaroFrequency    = { name: string; count: number };
 type ShoeCountByMonth = { month: string; avg: number };
-type InactiveMember = { _id: string; name: string; lastVaro: string | null };
+type InactiveMember   = { _id: string; name: string; lastVaro: string | null };
+type ReportGathering  = { title: string; date: string; totalShoes: number; shoeBreakdown: { size: string; qty: number }[] };
+type ReportData       = { monthLabel: string; gatherings: ReportGathering[] };
 type OverviewRes = {
   pairsByDate:      PairsByDate[];
   varoFrequency:    VaroFrequency[];
@@ -28,8 +30,43 @@ export default function Analytics() {
   const [freq,      setFreq]      = useState<VaroFrequency[]>([]);
   const [scm,       setScm]       = useState<ShoeCountByMonth[]>([]);
   const [inactive,  setInactive]  = useState<InactiveMember[]>([]);
-  const [freqSearch, setFreqSearch] = useState("");
+  const [freqSearch,  setFreqSearch]  = useState("");
   const [inactiveAsc, setInactiveAsc] = useState(false);
+
+  // Report state
+  const now = new Date();
+  const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+  const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+  const [reportMonth,   setReportMonth]   = useState(lastMonth);
+  const [reportYear,    setReportYear]    = useState(lastMonthYear);
+  const [reportData,    setReportData]    = useState<ReportData | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [sending,       setSending]       = useState(false);
+  const [sendStatus,    setSendStatus]    = useState<{ ok: boolean; msg: string } | null>(null);
+
+  const loadReport = useCallback(async (month: number, year: number) => {
+    setReportLoading(true);
+    setSendStatus(null);
+    const res  = await fetch(`/api/admin/report?month=${month}&year=${year}`);
+    const data = await res.json();
+    setReportData(data);
+    setReportLoading(false);
+  }, []);
+
+  useEffect(() => { loadReport(reportMonth, reportYear); }, [loadReport, reportMonth, reportYear]);
+
+  async function handleSendReport() {
+    setSending(true);
+    setSendStatus(null);
+    const res  = await fetch("/api/admin/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ month: reportMonth, year: reportYear }),
+    });
+    const data = await res.json();
+    setSendStatus(res.ok ? { ok: true, msg: `Report sent for ${data.monthLabel}` } : { ok: false, msg: data.error ?? "Failed to send" });
+    setSending(false);
+  }
 
   useEffect(() => {
     (async () => {
@@ -204,6 +241,90 @@ export default function Analytics() {
             </div>
           )}
         </div>
+      </section>
+
+      {/* Monthly Report */}
+      <section>
+        <h2 className="text-xl font-semibold mb-1">Monthly Email Report</h2>
+        <p className="text-sm text-gray-500 mb-4">Preview and send the report to configured recipients. Sends automatically on the 1st of each month.</p>
+
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          <select
+            className="ismaili-input text-sm w-40"
+            value={reportMonth}
+            onChange={e => setReportMonth(Number(e.target.value))}
+          >
+            {["January","February","March","April","May","June","July","August","September","October","November","December"]
+              .map((m, i) => <option key={i} value={i}>{m}</option>)}
+          </select>
+          <select
+            className="ismaili-input text-sm w-28"
+            value={reportYear}
+            onChange={e => setReportYear(Number(e.target.value))}
+          >
+            {Array.from({ length: 4 }, (_, i) => now.getFullYear() - i).map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+          <button
+            className="ismaili-btn text-sm"
+            onClick={handleSendReport}
+            disabled={sending || reportLoading}
+          >
+            {sending ? "Sending…" : "Send Report"}
+          </button>
+          {sendStatus && (
+            <span className={`text-sm font-medium ${sendStatus.ok ? "text-green-600" : "text-red-600"}`}>
+              {sendStatus.msg}
+            </span>
+          )}
+        </div>
+
+        {reportLoading ? (
+          <p className="text-gray-400 text-sm">Loading preview…</p>
+        ) : reportData && (
+          <div className="ismaili-card overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <span className="font-semibold text-sm">{reportData.monthLabel}</span>
+              <span className="text-gray-400 text-xs ml-2">— {reportData.gatherings.length} gathering{reportData.gatherings.length !== 1 ? "s" : ""}</span>
+            </div>
+            {reportData.gatherings.length === 0 ? (
+              <p className="text-gray-400 text-sm italic p-4">No gatherings recorded for this month.</p>
+            ) : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Gathering</th>
+                    <th>Date</th>
+                    <th className="text-center">Shoe Pairs</th>
+                    <th>Breakdown</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportData.gatherings.map((g, i) => (
+                    <tr key={i}>
+                      <td className="font-medium">{g.title || "Gathering"}</td>
+                      <td className="text-gray-500 text-sm">
+                        {new Date(g.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" })}
+                      </td>
+                      <td className="text-center font-semibold">{g.totalShoes}</td>
+                      <td className="text-gray-400 text-xs">
+                        {g.shoeBreakdown.length ? g.shoeBreakdown.map(s => `${s.size}: ${s.qty}`).join(", ") : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-gray-50 font-semibold">
+                    <td colSpan={2}>Total</td>
+                    <td className="text-center">{reportData.gatherings.reduce((s, g) => s + g.totalShoes, 0)}</td>
+                    <td />
+                  </tr>
+                </tfoot>
+              </table>
+            )}
+          </div>
+        )}
       </section>
 
     </div>

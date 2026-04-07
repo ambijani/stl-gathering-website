@@ -1,13 +1,12 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import connect from "@/lib/mongo";
-import Gathering from "@/models/Gathering";
 import nodemailer from "nodemailer";
+import { fetchReportData, ReportGathering } from "@/lib/reportData";
 
-function buildEmailHtml(month: string, gatherings: { title: string; date: Date; totalShoes: number; shoeBreakdown: { size: string; qty: number }[] }[]) {
+export function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]) {
   const rows = gatherings.map(g => {
-    const dateStr = new Date(g.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+    const dateStr   = new Date(g.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
     const breakdown = g.shoeBreakdown.length
       ? g.shoeBreakdown.map(s => `${s.size}: ${s.qty}`).join(", ")
       : "No data";
@@ -30,10 +29,10 @@ function buildEmailHtml(month: string, gatherings: { title: string; date: Date; 
   <div style="max-width:680px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
     <div style="background:#064e3b;padding:28px 32px;">
       <h1 style="color:#fff;margin:0;font-size:22px;">STL Ismaili Gathering</h1>
-      <p style="color:#a7f3d0;margin:6px 0 0;font-size:15px;">Monthly Report — ${month}</p>
+      <p style="color:#a7f3d0;margin:6px 0 0;font-size:15px;">Monthly Report — ${monthLabel}</p>
     </div>
     <div style="padding:28px 32px;">
-      <p style="color:#374151;margin:0 0 20px;">Here is a summary of the <strong>${gatherings.length} gathering${gatherings.length !== 1 ? "s" : ""}</strong> held in ${month}.</p>
+      <p style="color:#374151;margin:0 0 20px;">Here is a summary of the <strong>${gatherings.length} gathering${gatherings.length !== 1 ? "s" : ""}</strong> held in ${monthLabel}.</p>
       <table style="width:100%;border-collapse:collapse;font-size:14px;">
         <thead>
           <tr style="background:#f3f4f6;">
@@ -62,14 +61,35 @@ function buildEmailHtml(month: string, gatherings: { title: string; date: Date; 
 </html>`;
 }
 
+export async function sendReport(month: number, year: number) {
+  const { monthLabel, gatherings } = await fetchReportData(month, year);
+  const html = buildEmailHtml(monthLabel, gatherings);
+
+  const recipients = (process.env.REPORT_RECIPIENTS ?? "").split(",").map(e => e.trim()).filter(Boolean);
+  if (recipients.length === 0) throw new Error("No REPORT_RECIPIENTS configured");
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+  });
+
+  await transporter.sendMail({
+    from: `"STL Gathering" <${process.env.GMAIL_USER}>`,
+    to: recipients.join(", "),
+    subject: `STL Gathering Monthly Report — ${monthLabel}`,
+    html,
+  });
+
+  return { monthLabel, count: gatherings.length };
+}
+
 export async function GET(req: Request) {
-  // Allow manual triggers with ?secret= for testing; Vercel cron sends Authorization header
-  const authHeader = req.headers.get("authorization");
+  const authHeader    = req.headers.get("authorization");
   const { searchParams } = new URL(req.url);
-  const secret = process.env.CRON_SECRET;
+  const secret        = process.env.CRON_SECRET;
 
   if (secret) {
-    const cronAuth = authHeader === `Bearer ${secret}`;
+    const cronAuth   = authHeader === `Bearer ${secret}`;
     const manualAuth = searchParams.get("secret") === secret;
     if (!cronAuth && !manualAuth) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -77,52 +97,13 @@ export async function GET(req: Request) {
   }
 
   try {
-    await connect();
+    const now   = new Date();
+    // Default: last month. Accept optional ?month=&year= overrides.
+    const month = searchParams.has("month") ? Number(searchParams.get("month")) : now.getMonth() - 1;
+    const year  = searchParams.has("year")  ? Number(searchParams.get("year"))  : now.getFullYear();
 
-    // Get last month's date range
-    const now = new Date();
-    const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const firstOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthLabel = firstOfLastMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    const rawGatherings = await Gathering.find({
-      date: { $gte: firstOfLastMonth, $lt: firstOfThisMonth },
-    }).sort({ date: 1 }).lean();
-
-    const gatherings = rawGatherings.map(g => {
-      const shoeBreakdown = (g.shoeCount ?? []).filter((s: { size: string; qty: number }) => s.qty > 0);
-      const totalShoes = shoeBreakdown.reduce((sum: number, s: { size: string; qty: number }) => sum + s.qty, 0);
-      return {
-        title: g.title ?? "",
-        date: g.date,
-        totalShoes,
-        shoeBreakdown,
-      };
-    });
-
-    const html = buildEmailHtml(monthLabel, gatherings);
-
-    const recipients = (process.env.REPORT_RECIPIENTS ?? "").split(",").map(e => e.trim()).filter(Boolean);
-    if (recipients.length === 0) {
-      return Response.json({ error: "No REPORT_RECIPIENTS configured" }, { status: 500 });
-    }
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
-      },
-    });
-
-    await transporter.sendMail({
-      from: `"STL Gathering" <${process.env.GMAIL_USER}>`,
-      to: recipients.join(", "),
-      subject: `STL Gathering Monthly Report — ${monthLabel}`,
-      html,
-    });
-
-    return Response.json({ ok: true, month: monthLabel, gatherings: gatherings.length });
+    const { monthLabel, count } = await sendReport(month, year);
+    return Response.json({ ok: true, month: monthLabel, gatherings: count });
   } catch (error) {
     console.error("Monthly report error:", error);
     return Response.json(
