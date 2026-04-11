@@ -30,7 +30,7 @@ export default function GatheringDetail() {
   const { id } = useParams<{ id: string }>();
   const [g, setG] = useState<Gathering | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
-  const [tab, setTab] = useState<"varos" | "shoes" | "photos">("varos");
+  const [tab, setTab] = useState<"varos" | "photos">("varos");
 
   type Photo = { _id: string; filename: string; contentType: string };
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -177,24 +177,17 @@ export default function GatheringDetail() {
   }
 
   // ── Shoe count ─────────────────────────────────────────────────────────────
-  const [shoeRows, setShoeRows] = useState<{ size: string; qty: number }[]>([]);
-  useEffect(() => { if (g) setShoeRows(g.shoeCount ?? []); }, [g]);
+  const [shoeCount, setShoeCount] = useState(0);
+  useEffect(() => {
+    if (g) setShoeCount((g.shoeCount ?? []).reduce((s, r) => s + (Number(r.qty) || 0), 0));
+  }, [g]);
 
-  const shoeTotal = shoeRows.reduce((s, r) => s + (Number(r.qty) || 0), 0);
-
-  function updateRow(i: number, key: "size" | "qty", val: string) {
-    setShoeRows(rows => rows.map((r, idx) => idx === i ? { ...r, [key]: key === "qty" ? Number(val || 0) : val } : r));
-  }
-
-  async function saveShoeRows() {
-    const cleaned = shoeRows.filter(r => r.size && !Number.isNaN(r.qty));
-    const res = await fetch(`/api/admin/gatherings/${id}/shoecount`, {
+  async function saveShoeCount(val: number) {
+    await fetch(`/api/admin/gatherings/${id}/shoecount`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: cleaned }),
+      body: JSON.stringify({ items: [{ size: "total", qty: val }] }),
     });
-    if (!res.ok) alert("Failed to save shoe counts");
-    else await loadGathering();
   }
 
   if (!g) return <div className="admin-page text-gray-400">Loading…</div>;
@@ -242,14 +235,14 @@ export default function GatheringDetail() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b">
-        {(["varos","shoes","photos"] as const).map(t => (
+        {(["varos","photos"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors capitalize ${
               tab === t
                 ? "border-[#2d5016] text-[#2d5016]"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}>
-            {t === "shoes" ? "Shoe Count" : t === "photos" ? "Jamati Picture" : t.charAt(0).toUpperCase() + t.slice(1)}
+            {t === "photos" ? "Jamati Picture" : t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
       </div>
@@ -314,6 +307,19 @@ export default function GatheringDetail() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Shoe count */}
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-gray-700">Shoe Count</label>
+            <input
+              type="number"
+              min={0}
+              className="ismaili-input w-28 text-sm py-1.5 px-3"
+              value={shoeCount}
+              onChange={e => setShoeCount(Number(e.target.value) || 0)}
+              onBlur={() => saveShoeCount(shoeCount)}
+            />
           </div>
         </div>
       )}
@@ -487,47 +493,6 @@ export default function GatheringDetail() {
         </div>
       )}
 
-      {/* ── Shoe Count tab ── */}
-      {tab === "shoes" && (
-        <div className="space-y-3">
-          <div className="border rounded overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-left p-2">Label</th>
-                  <th className="text-left p-2">Count</th>
-                  <th className="text-left p-2">Remove</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shoeRows.map((r, i) => (
-                  <tr key={i} className="border-t">
-                    <td className="p-2"><input className="border p-1 rounded w-32" value={r.size} onChange={e => updateRow(i, "size", e.target.value)} placeholder="e.g. TOTAL" /></td>
-                    <td className="p-2"><input className="border p-1 rounded w-24" type="number" min={0} value={r.qty} onChange={e => updateRow(i, "qty", e.target.value)} /></td>
-                    <td className="p-2"><button className="underline text-red-600 text-xs" onClick={() => setShoeRows(rows => rows.filter((_, idx) => idx !== i))}>Remove</button></td>
-                  </tr>
-                ))}
-                {!shoeRows.length && (
-                  <tr><td className="p-3 text-gray-500" colSpan={3}>No rows. Add one below.</td></tr>
-                )}
-              </tbody>
-              {shoeRows.length > 0 && (
-                <tfoot className="bg-gray-50 border-t">
-                  <tr>
-                    <td className="p-2 font-medium">Total</td>
-                    <td className="p-2 font-semibold">{shoeTotal}</td>
-                    <td />
-                  </tr>
-                </tfoot>
-              )}
-            </table>
-          </div>
-          <div className="flex gap-2">
-            <button className="px-4 py-2 rounded-lg border text-sm font-medium hover:bg-gray-50 transition-colors" onClick={() => setShoeRows(rows => [...rows, { size: "", qty: 0 }])}>+ Add Row</button>
-            <button className="ismaili-button text-sm py-2" onClick={saveShoeRows}>Save</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
