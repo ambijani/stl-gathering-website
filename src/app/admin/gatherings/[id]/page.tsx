@@ -30,7 +30,7 @@ export default function GatheringDetail() {
   const { id } = useParams<{ id: string }>();
   const [g, setG] = useState<Gathering | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
-  const [tab, setTab] = useState<"varos" | "matrix" | "shoes" | "photos">("varos");
+  const [tab, setTab] = useState<"varos" | "shoes" | "photos">("varos");
 
   type Photo = { _id: string; filename: string; contentType: string };
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -176,49 +176,6 @@ export default function GatheringDetail() {
     return people.find(p => p._id === pid)?.name ?? pid;
   }
 
-  // ── Matrix view ────────────────────────────────────────────────────────────
-  const [matrixSearch, setMatrixSearch] = useState("");
-  // varoId -> Set<personId>
-  const [matrix, setMatrix] = useState<Record<string, Set<string>>>({});
-  const [matrixSaving, setMatrixSaving] = useState(false);
-
-  // Initialise matrix from gathering data whenever gathering loads
-  useEffect(() => {
-    if (!g) return;
-    const m: Record<string, Set<string>> = {};
-    for (const v of g.varos ?? []) m[v._id] = new Set(v.assignedPeople ?? []);
-    setMatrix(m);
-  }, [g]);
-
-  function toggleMatrix(varoId: string, personId: string) {
-    setMatrix(prev => {
-      const next = { ...prev, [varoId]: new Set(prev[varoId] ?? []) };
-      if (next[varoId].has(personId)) next[varoId].delete(personId);
-      else next[varoId].add(personId);
-      return next;
-    });
-  }
-
-  async function saveMatrix() {
-    if (!g) return;
-    setMatrixSaving(true);
-    for (const v of g.varos ?? []) {
-      const personIds = Array.from(matrix[v._id] ?? []);
-      await fetch(`/api/admin/gatherings/${id}/varos/${v._id}/assign`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ personIds, mode: "replace" }),
-      });
-    }
-    setMatrixSaving(false);
-    await loadGathering();
-  }
-
-  const matrixPeople = useMemo(() => {
-    const q = matrixSearch.trim().toLowerCase();
-    return q ? people.filter(p => p.name.toLowerCase().includes(q)) : people;
-  }, [people, matrixSearch]);
-
   // ── Shoe count ─────────────────────────────────────────────────────────────
   const [shoeRows, setShoeRows] = useState<{ size: string; qty: number }[]>([]);
   useEffect(() => { if (g) setShoeRows(g.shoeCount ?? []); }, [g]);
@@ -285,7 +242,7 @@ export default function GatheringDetail() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b">
-        {(["varos","matrix","shoes","photos"] as const).map(t => (
+        {(["varos","shoes","photos"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors capitalize ${
               tab === t
@@ -444,72 +401,6 @@ export default function GatheringDetail() {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ── Matrix tab ── */}
-      {tab === "matrix" && (
-        <div className="space-y-3">
-          {(!g.varos || !g.varos.length) ? (
-            <p className="text-gray-500 text-sm">No Varos yet — add some in the Varos tab first.</p>
-          ) : (
-            <>
-              <div className="flex items-center gap-3">
-                <input
-                  className="border rounded p-2 text-sm w-64"
-                  placeholder="Filter people…"
-                  value={matrixSearch}
-                  onChange={e => setMatrixSearch(e.target.value)}
-                />
-                <button
-                  onClick={saveMatrix}
-                  disabled={matrixSaving}
-                  className="ismaili-button text-sm py-2 disabled:opacity-50"
-                >
-                  {matrixSaving ? "Saving…" : "Save All"}
-                </button>
-              </div>
-
-              <div className="overflow-auto border rounded">
-                <table className="text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="text-left p-2 border-b border-r font-medium sticky left-0 bg-gray-50 min-w-40 z-10">Person</th>
-                      {g.varos.map(v => (
-                        <th key={v._id} className="p-2 border-b border-r font-medium text-center min-w-24 max-w-28">
-                          <span className="block truncate">{v.title}</span>
-                          <span className="text-gray-400 font-normal">
-                            {(matrix[v._id]?.size ?? 0)} assigned
-                          </span>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {matrixPeople.map(p => (
-                      <tr key={p._id} className="hover:bg-blue-50">
-                        <td className="p-2 border-b border-r font-medium sticky left-0 bg-white hover:bg-blue-50 z-10">{p.name}</td>
-                        {g.varos.map(v => (
-                          <td key={v._id} className="p-2 border-b border-r text-center">
-                            <input
-                              type="checkbox"
-                              className="cursor-pointer w-4 h-4"
-                              checked={!!(matrix[v._id]?.has(p._id))}
-                              onChange={() => toggleMatrix(v._id, p._id)}
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                    {!matrixPeople.length && (
-                      <tr><td className="p-3 text-gray-500" colSpan={g.varos.length + 1}>No people match.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <p className="text-xs text-gray-400">Changes are not saved until you click Save All.</p>
-            </>
-          )}
         </div>
       )}
 
