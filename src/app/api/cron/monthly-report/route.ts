@@ -19,6 +19,25 @@ export function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]
     ? (gatherings.reduce((sum, g) => sum + g.totalShoes, 0) / gatherings.length).toFixed(1)
     : "0";
 
+  const gatheringsWithPhotos = gatherings.filter(g => g.photos.length > 0);
+  const photosSection = gatheringsWithPhotos.length > 0
+    ? `
+    <div style="padding:0 32px 28px;">
+      <h2 style="font-size:16px;font-weight:600;color:#374151;margin:0 0 16px;padding-top:4px;">Jamati Photos</h2>
+      ${gatheringsWithPhotos.map(g => {
+        const dateStr = new Date(g.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+        const imgTags = g.photos.map(p =>
+          `<img src="cid:${p.cid}" alt="${g.title || "Gathering"}" style="width:200px;height:150px;object-fit:cover;border-radius:6px;display:block;" />`
+        ).join("");
+        return `
+        <div style="margin-bottom:20px;">
+          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#6b7280;">${g.title || "Gathering"} · ${dateStr}</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">${imgTags}</div>
+        </div>`;
+      }).join("")}
+    </div>`
+    : "";
+
   return `
 <!DOCTYPE html>
 <html>
@@ -49,6 +68,7 @@ export function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]
       </table>
       ${gatherings.length === 0 ? '<p style="color:#6b7280;font-style:italic;">No gatherings recorded for this month.</p>' : ""}
     </div>
+    ${photosSection}
     <div style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e5e7eb;">
       <p style="margin:0;font-size:12px;color:#9ca3af;">Sent automatically on the 1st of each month · STL Ismaili Gathering</p>
     </div>
@@ -70,11 +90,21 @@ export async function sendReport(month: number, year: number, extraRecipients: s
     auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
   });
 
+  const attachments = gatherings.flatMap(g =>
+    g.photos.map(p => ({
+      filename: p.filename,
+      content: p.data,
+      contentType: p.contentType,
+      cid: p.cid,
+    }))
+  );
+
   await transporter.sendMail({
     from: `"STL Gathering" <${process.env.GMAIL_USER}>`,
     to: recipients.join(", "),
     subject: `STL Gathering Monthly Report — ${monthLabel}`,
     html,
+    attachments,
   });
 
   return { monthLabel, count: gatherings.length };
