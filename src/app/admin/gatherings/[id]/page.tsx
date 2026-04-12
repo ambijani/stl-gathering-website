@@ -117,6 +117,10 @@ export default function GatheringDetail() {
   const [newName, setNewName] = useState("");
   const [addingLoading, setAddingLoading] = useState(false);
 
+  type VaroHistoryEntry = { date: string; gatheringTitle: string; assigned: { _id: string; name: string }[] };
+  const [varoHistory, setVaroHistory] = useState<VaroHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   const currentVaro = useMemo(
     () => g?.varos.find(v => v._id === assignOpenFor) ?? null,
     [assignOpenFor, g]
@@ -136,7 +140,13 @@ export default function GatheringDetail() {
     setPeopleSearch("");
     setAddingNew(false);
     setNewName("");
+    setVaroHistory([]);
     setAssignOpenFor(varoId);
+    setHistoryLoading(true);
+    fetch(`/api/admin/varos/history?title=${encodeURIComponent(varo.title)}&limit=8`)
+      .then(r => r.json())
+      .then((data: VaroHistoryEntry[]) => setVaroHistory(data))
+      .finally(() => setHistoryLoading(false));
   }
 
   async function createAndSelect() {
@@ -335,6 +345,31 @@ export default function GatheringDetail() {
               </h3>
               <button onClick={() => setAssignOpenFor(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
             </div>
+
+            {/* Recent assignment history */}
+            {(historyLoading || varoHistory.length > 0) && (
+              <div className="px-4 pt-3 pb-2 border-b">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Recent assignments</p>
+                {historyLoading ? (
+                  <p className="text-xs text-gray-400">Loading history…</p>
+                ) : (
+                  <div className="space-y-1">
+                    {varoHistory.map((entry, i) => {
+                      const dateStr = new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+                      return (
+                        <div key={i} className="flex items-baseline gap-2 text-xs">
+                          <span className="text-gray-400 shrink-0">{dateStr}</span>
+                          {entry.assigned.length === 0
+                            ? <span className="text-gray-300 italic">unassigned</span>
+                            : <span className="text-gray-700">{entry.assigned.map(p => p.name).join(", ")}</span>
+                          }
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Search */}
             <div className="px-4 pt-3 pb-2">
