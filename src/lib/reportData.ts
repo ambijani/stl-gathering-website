@@ -43,7 +43,7 @@ export async function fetchReportData(month: number, year: number): Promise<Repo
     photosByGathering[key].push({
       cid: `photo_${(p._id as { toString(): string }).toString()}`,
       contentType: p.contentType,
-      data: Buffer.isBuffer(p.data) ? p.data : Buffer.from((p.data as any).buffer),
+      data: Buffer.isBuffer(p.data) ? p.data : Buffer.from((p.data as { buffer: ArrayBuffer }).buffer),
       filename: p.filename,
     });
   }
