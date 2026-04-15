@@ -104,6 +104,34 @@ body {
   background: var(--green-900);
   box-shadow: 0 2px 8px rgba(26,48,9,0.25);
 }
+.ismaili-button-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--green-800);
+  border: 2px solid var(--green-800);
+  border-radius: 7px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.ismaili-button-outline:hover {
+  background: var(--green-100);
+}
+.ismaili-button-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Demo mode ─────────────────────────────────────────────────────────────── */
+.demo-blur {
+  filter: blur(5px);
+  border-radius: 3px;
+  display: inline-block;
+}
 
 /* ── Admin page shell ──────────────────────────────────────────────────── */
 .admin-page {

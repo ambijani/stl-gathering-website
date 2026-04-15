@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { verifySessionToken } from "@/lib/session";
 
 export async function requireAdmin() {
@@ -8,4 +8,9 @@ export async function requireAdmin() {
     return new Response("Unauthorized", { status: 401 });
   }
   return null;
+}
+
+export async function isDemoMode(): Promise<boolean> {
+  const headerStore = await headers();
+  return headerStore.get("x-demo-mode") === "1";
 }

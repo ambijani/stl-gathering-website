@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { BlurredName } from "@/components/DemoContext";
 import { useParams } from "next/navigation";
 
 type Person = { _id: string; name: string; email?: string; interests?: string[] };
@@ -300,7 +301,7 @@ export default function GatheringDetail() {
                       <td className="text-gray-500 text-sm">
                         {names.length === 0
                           ? <span className="text-gray-300 italic">None</span>
-                          : <span title={names.join(", ")}>{preview}</span>
+                          : <BlurredName><span title={names.join(", ")}>{preview}</span></BlurredName>
                         }
                       </td>
                       <td>
@@ -361,7 +362,7 @@ export default function GatheringDetail() {
                           <span className="text-gray-400 shrink-0">{dateStr}</span>
                           {entry.assigned.length === 0
                             ? <span className="text-gray-300 italic">unassigned</span>
-                            : <span className="text-gray-700">{entry.assigned.map(p => p.name).join(", ")}</span>
+                            : <BlurredName><span className="text-gray-700">{entry.assigned.map(p => p.name).join(", ")}</span></BlurredName>
                           }
                         </div>
                       );
@@ -392,7 +393,7 @@ export default function GatheringDetail() {
                     checked={!!selected[p._id]}
                     onChange={() => setSelected(s => ({ ...s, [p._id]: !s[p._id] }))}
                   />
-                  <span className="text-sm">{p.name}</span>
+                  <span className="text-sm"><BlurredName>{p.name}</BlurredName></span>
                 </label>
               ))}
               {!filteredPeople.length && (

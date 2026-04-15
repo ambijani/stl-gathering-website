@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifySessionToken } from "@/lib/session";
+import { verifySessionToken, isDemoToken } from "@/lib/session";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -18,7 +18,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // public admin endpoints that MUST be reachable when not authed
-  const publicAdminApis = ["/api/admin/login"];
+  const publicAdminApis = ["/api/admin/login", "/api/admin/demo-login"];
   const isPublicAdminApi = publicAdminApis.some((p) => pathname.startsWith(p));
 
   // login page must be public
@@ -50,6 +50,22 @@ export async function middleware(req: NextRequest) {
       const url = req.nextUrl.clone();
       url.pathname = "/admin/login";
       return NextResponse.redirect(url);
+    }
+
+    // Demo mode: block all mutations except logout
+    if (isDemoToken(token)) {
+      const isMutation = req.method !== "GET";
+      const isLogout = pathname === "/api/admin/logout";
+      if (isMutation && !isLogout) {
+        return NextResponse.json(
+          { error: "Demo mode: this action is disabled" },
+          { status: 403 }
+        );
+      }
+      // Forward demo flag so API routes can adjust responses (e.g. redact phone numbers)
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set("x-demo-mode", "1");
+      return NextResponse.next({ request: { headers: requestHeaders } });
     }
   }
 

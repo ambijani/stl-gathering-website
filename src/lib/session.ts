@@ -34,6 +34,23 @@ export async function createSessionToken(): Promise<string> {
   return `${nonce}.${bufToHex(sig)}`;
 }
 
+/** Create a signed demo session token: `demo.<nonce>.<hmac-hex>` */
+export async function createDemoSessionToken(): Promise<string> {
+  const secret = getSecret();
+  const nonce = `demo.${bufToHex(globalThis.crypto.getRandomValues(new Uint8Array(16)))}`;
+  const key = await getKey(secret);
+  const sig = await globalThis.crypto.subtle.sign("HMAC", key, new TextEncoder().encode(nonce));
+  return `${nonce}.${bufToHex(sig)}`;
+}
+
+/** Returns true if the token is a demo session (nonce starts with "demo."). */
+export function isDemoToken(token: string | undefined): boolean {
+  if (!token) return false;
+  const dot = token.lastIndexOf(".");
+  if (dot === -1) return false;
+  return token.slice(0, dot).startsWith("demo.");
+}
+
 /** Verify a session token. Returns true only if the HMAC signature is valid. */
 export async function verifySessionToken(token: string | undefined): Promise<boolean> {
   if (!process.env.SESSION_SECRET || !token) return false;
