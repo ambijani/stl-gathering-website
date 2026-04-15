@@ -14,6 +14,14 @@ Community gathering management platform for the STL Ismaili community. Tracks Va
 - Analytics — average shoe count by month, shoe count per date, Varo frequency by person
 - HMAC-SHA256 session auth with rate-limited login
 
+**Demo Mode**
+- Read-only access to the full admin panel without a password — useful for sharing as a portfolio piece or showing the UI to others
+- Activated via the "Try Demo" button on the login page, which issues a signed demo session token (2-hour expiry)
+- All write operations (POST, PUT, DELETE) are blocked at the middleware layer and return `403 Demo mode: this action is disabled`
+- Member names and sensitive fields are visually blurred client-side via a `BlurredName` component to protect real community data
+- Phone numbers and other PII are redacted server-side — API routes check the `x-demo-mode` header (forwarded by middleware) and omit sensitive fields from responses
+- Demo sessions are cryptographically distinct from real admin sessions (`isDemoToken` check in `middleware.ts`) so they can never be escalated to write access
+
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
