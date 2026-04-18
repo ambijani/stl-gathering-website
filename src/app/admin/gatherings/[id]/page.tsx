@@ -36,6 +36,7 @@ export default function GatheringDetail() {
   type Photo = { _id: string; filename: string; contentType: string };
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
@@ -450,7 +451,24 @@ export default function GatheringDetail() {
       {tab === "photos" && (
         <div className="space-y-4">
           {/* Upload area */}
-          <label className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${photoUploading ? "border-gray-200 bg-gray-50" : "border-gray-300 hover:border-green-400 hover:bg-green-50"}`}>
+          <label
+            className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+              photoUploading
+                ? "border-gray-200 bg-gray-50"
+                : dragOver
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-300 hover:border-green-400 hover:bg-green-50"
+            }`}
+            onDragOver={e => { e.preventDefault(); if (!photoUploading) setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={async e => {
+              e.preventDefault();
+              setDragOver(false);
+              if (photoUploading) return;
+              const files = Array.from(e.dataTransfer.files);
+              for (const file of files) await uploadPhoto(file);
+            }}
+          >
             <input
               type="file"
               className="hidden"
@@ -467,7 +485,7 @@ export default function GatheringDetail() {
               <p className="text-sm text-gray-400">Uploading…</p>
             ) : (
               <>
-                <p className="text-sm font-medium text-gray-600">Click to upload files</p>
+                <p className="text-sm font-medium text-gray-600">{dragOver ? "Drop to upload" : "Click or drag & drop to upload"}</p>
                 <p className="text-xs text-gray-400 mt-1">Images, videos, PDFs — any file type</p>
               </>
             )}
