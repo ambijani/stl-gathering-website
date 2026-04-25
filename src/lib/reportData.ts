@@ -52,7 +52,8 @@ export async function fetchReportData(month: number, year: number): Promise<Repo
     const shoeBreakdown = (g.shoeCount ?? []).filter((s: { size: string; qty: number }) => s.qty > 0);
     const totalShoes    = shoeBreakdown.reduce((sum: number, s: { size: string; qty: number }) => sum + s.qty, 0);
     const photos        = photosByGathering[(g._id as { toString(): string }).toString()] ?? [];
-    return { title: g.title ?? "", date: g.date, totalShoes, shoeBreakdown, photos };
+    const tags = Array.isArray(g.tags) ? (g.tags as string[]) : (g.title ? [g.title as string] : []);
+    return { title: tags.join(", ") || "Gathering", date: g.date, totalShoes, shoeBreakdown, photos };
   });
 
   return { monthLabel, gatherings };

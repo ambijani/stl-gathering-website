@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 
 type Person = { _id: string; name: string; email?: string; interests?: string[] };
 type Varo = { _id: string; title: string; assignedPeople?: string[] };
-type Gathering = { _id: string; title?: string; date: string; notes?: string; varos: Varo[]; shoeCount: { size: string; qty: number }[] };
+type Gathering = { _id: string; tags?: string[]; date: string; notes?: string; varos: Varo[]; shoeCount: { size: string; qty: number }[] };
 
 const FRIDAY_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
 const CHANDRAAT_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Chandraat Ginan", "Article of the Month", "Chandraat Tasbih", "Announcements", "Conclusion Dua"];
@@ -112,6 +112,7 @@ export default function GatheringDetail() {
   }
 
   // ── Varo assignment ────────────────────────────────────────────────────────
+  const [tagsOpen, setTagsOpen] = useState(false);
   const [assignOpenFor, setAssignOpenFor] = useState<string | null>(null);
   const [peopleSearch, setPeopleSearch] = useState("");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -213,20 +214,41 @@ export default function GatheringDetail() {
           <h1 className="page-heading">
             {new Date(g.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}
           </h1>
-          <select
-            value={g.title ?? ""}
-            onChange={async e => {
-              const res = await fetch(`/api/admin/gatherings/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title: e.target.value }),
-              });
-              if (res.ok) await loadGathering(); else alert("Failed to update type.");
-            }}
-            className="ismaili-input text-sm py-1.5 px-3"
-          >
-            {GATHERING_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
+          <div className="relative">
+            {tagsOpen && <div className="fixed inset-0 z-10" onClick={() => setTagsOpen(false)} />}
+            <button
+              type="button"
+              onClick={() => setTagsOpen(o => !o)}
+              className="ismaili-input text-sm py-1.5 px-3 flex items-center gap-2 min-w-44 z-20 relative"
+            >
+              <span className="flex-1 text-left">{(g.tags ?? []).length === 0 ? "Select type…" : (g.tags ?? []).join(", ")}</span>
+              <span className="text-gray-400">▾</span>
+            </button>
+            {tagsOpen && (
+              <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-1.5 min-w-44 z-20">
+                {GATHERING_TYPES.map(type => (
+                  <label key={type} className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-gray-50 rounded cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={(g.tags ?? []).includes(type)}
+                      onChange={async e => {
+                        const newTags = e.target.checked
+                          ? [...(g.tags ?? []), type]
+                          : (g.tags ?? []).filter(t => t !== type);
+                        const res = await fetch(`/api/admin/gatherings/${id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ tags: newTags }),
+                        });
+                        if (res.ok) await loadGathering(); else alert("Failed to update type.");
+                      }}
+                    />
+                    {type}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <input
           className="mt-2 ismaili-input text-sm text-gray-600 w-full max-w-lg"

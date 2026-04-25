@@ -19,6 +19,7 @@ const ShoeCountItemSchema = new Schema(
 const GatheringSchema = new Schema(
   {
     title: String,
+    tags: { type: [String], default: undefined },
     date: { type: Date, required: true, index: true },
     notes: String,
     varos: [VaroSchema],

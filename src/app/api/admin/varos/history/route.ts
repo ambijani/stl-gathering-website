@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const gatherings = await Gathering.find({
     "varos.title": { $regex: new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
   })
-    .select("title date varos")
+    .select("title tags date varos")
     .sort({ date: -1 })
     .limit(limit)
     .lean();
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     }));
     return {
       date: g.date,
-      gatheringTitle: g.title ?? "",
+      gatheringTitle: (Array.isArray(g.tags) ? (g.tags as string[]) : (g.title ? [g.title as string] : [])).join(", "),
       assigned,
     };
   });

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type Varo = { _id: string; title: string; capacity?: number; assignedPeople?: string[] };
-type Gathering = { _id: string; title?: string; date: string; notes?: string; varos: Varo[]; shoeCount: { size: string; qty: number }[] };
+type Gathering = { _id: string; tags?: string[]; date: string; notes?: string; varos: Varo[]; shoeCount: { size: string; qty: number }[] };
 
 const GATHERING_TYPES = [
   { value: "Friday Vaaros",    label: "Friday Vaaros",    bg: "bg-green-100",  text: "text-green-700"  },
@@ -15,17 +15,27 @@ const GATHERING_TYPES = [
   { value: "Other",            label: "Other",             bg: "bg-gray-100",   text: "text-gray-600"   },
 ];
 
-function typeBadge(title?: string) {
-  const match = GATHERING_TYPES.find(t => title?.includes(t.value));
-  const { label, bg, text } = match ?? GATHERING_TYPES[GATHERING_TYPES.length - 1];
-  return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${bg} ${text}`}>{label}</span>;
+function typeBadges(tags?: string[]) {
+  if (!tags?.length) {
+    const { label, bg, text } = GATHERING_TYPES[GATHERING_TYPES.length - 1];
+    return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${bg} ${text}`}>{label}</span>;
+  }
+  return (
+    <span className="flex flex-wrap gap-1">
+      {tags.map(tag => {
+        const match = GATHERING_TYPES.find(t => t.value === tag) ?? GATHERING_TYPES[GATHERING_TYPES.length - 1];
+        return <span key={tag} className={`text-xs px-2 py-0.5 rounded-full font-medium ${match.bg} ${match.text}`}>{match.label}</span>;
+      })}
+    </span>
+  );
 }
 
 export default function GatheringsPage() {
   const [items, setItems] = useState<Gathering[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [type, setType] = useState<string>("Friday Vaaros");
+  const [tags, setTags] = useState<string[]>(["Friday Vaaros"]);
+  const [typeDropOpen, setTypeDropOpen] = useState(false);
   const [date, setDate] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
 
@@ -46,10 +56,10 @@ export default function GatheringsPage() {
     const res = await fetch("/api/admin/gatherings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: type, date: localDate.toISOString(), notes }),
+      body: JSON.stringify({ tags, date: localDate.toISOString(), notes }),
     });
     if (!res.ok) { alert(`Failed to create: ${await res.text()}`); return; }
-    setDate(""); setNotes(""); await load();
+    setDate(""); setNotes(""); setTags(["Friday Vaaros"]); await load();
   }
 
   return (
@@ -62,9 +72,31 @@ export default function GatheringsPage() {
           {!loading && <p className="text-sm text-gray-500 mt-0.5">{items.length} total</p>}
         </div>
         <form onSubmit={onCreate} className="flex flex-wrap gap-2 items-end">
-          <select className="ismaili-input text-sm" value={type} onChange={e => setType(e.target.value)}>
-            {GATHERING_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
+          <div className="relative">
+            {typeDropOpen && <div className="fixed inset-0 z-10" onClick={() => setTypeDropOpen(false)} />}
+            <button
+              type="button"
+              onClick={() => setTypeDropOpen(o => !o)}
+              className="ismaili-input text-sm flex items-center gap-2 min-w-44"
+            >
+              <span className="flex-1 text-left">{tags.length === 0 ? "Select type…" : tags.join(", ")}</span>
+              <span className="text-gray-400">▾</span>
+            </button>
+            {typeDropOpen && (
+              <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-1.5 min-w-44 z-20">
+                {GATHERING_TYPES.map(t => (
+                  <label key={t.value} className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-gray-50 rounded cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={tags.includes(t.value)}
+                      onChange={e => setTags(prev => e.target.checked ? [...prev, t.value] : prev.filter(v => v !== t.value))}
+                    />
+                    {t.label}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
           <input className="ismaili-input text-sm" type="date" value={date} onChange={e => setDate(e.target.value)} required />
           <input className="ismaili-input text-sm w-52" placeholder="Notes (optional)" value={notes} onChange={e => setNotes(e.target.value)} />
           <button className="ismaili-button text-sm py-2.5 px-5">+ Create</button>
@@ -92,7 +124,7 @@ export default function GatheringsPage() {
                 return (
                   <tr key={g._id}>
                     <td className="font-medium text-gray-900">{new Date(g.date).toLocaleDateString("en-US", { timeZone: "UTC" })}</td>
-                    <td>{typeBadge(g.title)}</td>
+                    <td>{typeBadges(g.tags)}</td>
                     <td className="text-gray-500">{g.varos?.length ?? 0}</td>
                     <td className="text-gray-500">{totalPairs > 0 ? totalPairs : <span className="text-gray-300">—</span>}</td>
                     <td>
