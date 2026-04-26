@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { BlurredName } from "@/components/DemoContext";
+import { BlurredName, useDemo } from "@/components/DemoContext";
 
-type Person = { _id: string; name: string; phone?: string; interests?: string[] };
+type Person = { _id: string; name: string; phone?: string; interests?: string[]; createdAt?: string };
 
 export default function PeoplePage() {
+  const isDemo    = useDemo();
   const [people, setPeople]   = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState("");
@@ -23,6 +24,26 @@ export default function PeoplePage() {
     setLoading(false);
   }
   useEffect(() => { void load(); }, []);
+
+  function exportCsv() {
+    const rows = [
+      ["Name", "Phone", "Interests", "Joined"],
+      ...people.map(p => [
+        `"${(p.name ?? "").replace(/"/g, "\"\"")}"`,
+        `"${(p.phone ?? "").replace(/"/g, "\"\"")}"`,
+        `"${(p.interests ?? []).join("; ").replace(/"/g, "\"\"")}"`,
+        `"${p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US") : ""}"`,
+      ]),
+    ];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `people-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -80,17 +101,27 @@ export default function PeoplePage() {
     <div className="admin-page space-y-5">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="page-heading">People</h1>
           {!loading && <p className="text-sm text-gray-500 mt-0.5">{people.length} members</p>}
         </div>
-        <input
-          className="ismaili-input w-64 text-sm"
-          placeholder="Search by name…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <div className="flex items-center gap-2">
+          {!loading && !isDemo && (
+            <button
+              onClick={exportCsv}
+              className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-3.5 py-1 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+            >
+              ↓ Export CSV
+            </button>
+          )}
+          <input
+            className="ismaili-input w-64 text-sm"
+            placeholder="Search by name…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* Merge panel */}
