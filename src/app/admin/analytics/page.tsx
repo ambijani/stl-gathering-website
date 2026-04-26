@@ -139,6 +139,7 @@ export default function Analytics() {
             <p className="text-sm text-gray-500">Total Varos performed across all gatherings (top {freq.length})</p>
           </div>
           <input
+            aria-label="Search varo frequency by name"
             className="ismaili-input text-sm w-56"
             placeholder="Search name…"
             value={freqSearch}
@@ -291,7 +292,7 @@ export default function Analytics() {
             {sending ? "Sending…" : "Send Report"}
           </button>
           {sendStatus && (
-            <span className={`text-sm font-medium ${sendStatus.ok ? "text-green-600" : "text-red-600"}`}>
+            <span role="status" className={`text-sm font-medium ${sendStatus.ok ? "text-green-600" : "text-red-600"}`}>
               {sendStatus.msg}
             </span>
           )}

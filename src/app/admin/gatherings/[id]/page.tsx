@@ -454,7 +454,7 @@ export default function GatheringDetail() {
                     >
                       {addingLoading ? "Adding…" : "Add & Select"}
                     </button>
-                    <button onClick={() => { setAddingNew(false); setNewName(""); }} className="text-gray-400 hover:text-gray-600 text-sm">✕</button>
+                    <button onClick={() => { setAddingNew(false); setNewName(""); }} aria-label="Cancel adding person" className="text-gray-400 hover:text-gray-600 text-sm">✕</button>
                   </div>
                 ) : (
                   <button
