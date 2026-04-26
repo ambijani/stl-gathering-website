@@ -120,10 +120,12 @@ export default function Signup() {
           <div className="ismaili-card p-8">
             <form onSubmit={onSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium ismaili-text-primary mb-2">Full Name *</label>
+                <label htmlFor="signup-name" className="block text-sm font-medium ismaili-text-primary mb-2">Full Name *</label>
                 <input
+                  id="signup-name"
                   className="ismaili-input w-full"
                   name="name"
+                  autoComplete="name"
                   placeholder="Enter your full name"
                   required
                   onChange={update}
@@ -131,11 +133,13 @@ export default function Signup() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium ismaili-text-primary mb-2">Phone</label>
+                <label htmlFor="signup-phone" className="block text-sm font-medium ismaili-text-primary mb-2">Phone</label>
                 <input
+                  id="signup-phone"
                   className="ismaili-input w-full"
                   name="phone"
                   type="tel"
+                  autoComplete="tel"
                   placeholder="(314) 555-0123"
                   onChange={update}
                 />
@@ -197,8 +201,9 @@ export default function Signup() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium ismaili-text-primary mb-2">Availability & Notes</label>
+                <label htmlFor="signup-availability" className="block text-sm font-medium ismaili-text-primary mb-2">Availability &amp; Notes</label>
                 <textarea
+                  id="signup-availability"
                   className="ismaili-input w-full h-24 resize-none"
                   name="availability"
                   placeholder="Tell us about your availability and any additional notes..."
@@ -207,7 +212,7 @@ export default function Signup() {
               </div>
 
               {error && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">{error}</p>
+                <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">{error}</p>
               )}
               <button type="submit" disabled={submitting} className="ismaili-button w-full text-lg py-3 disabled:opacity-60">
                 {submitting ? "Submitting…" : "Join Our Community"}
