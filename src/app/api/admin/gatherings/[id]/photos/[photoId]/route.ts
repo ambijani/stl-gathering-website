@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { requireAdmin } from "@/app/api/_auth";
+import { requireAdmin, isValidObjectId } from "@/app/api/_auth";
 import connect from "@/lib/mongo";
 import Photo from "@/models/Photo";
 
@@ -10,6 +10,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (authError) return authError;
 
   const { photoId } = await params;
+  if (!isValidObjectId(photoId)) return new Response("Invalid ID", { status: 400 });
   await connect();
 
   try {
@@ -31,7 +32,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     });
   } catch (err) {
     console.error("Photo GET error:", err);
-    return Response.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 500 });
+    return Response.json({ error: "Failed to retrieve photo" }, { status: 500 });
   }
 }
 
@@ -40,6 +41,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (authError) return authError;
 
   const { photoId } = await params;
+  if (!isValidObjectId(photoId)) return new Response("Invalid ID", { status: 400 });
   const { filename } = await req.json() as { filename?: string };
   if (!filename?.trim()) return Response.json({ error: "Filename required" }, { status: 400 });
 
@@ -55,6 +57,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   if (authError) return authError;
 
   const { photoId } = await params;
+  if (!isValidObjectId(photoId)) return new Response("Invalid ID", { status: 400 });
   await connect();
 
   await Photo.findByIdAndDelete(photoId);

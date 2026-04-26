@@ -13,6 +13,22 @@ const schema = z.object({
   recaptchaToken: z.string().optional(),
 });
 
+/* ── Rate limiter (in-memory, per-IP) ── */
+const SUBMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const SUBMIT_MAX = 20;
+const submitAttempts = new Map<string, { count: number; windowStart: number }>();
+
+function isSubmitRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = submitAttempts.get(ip);
+  if (!entry || now - entry.windowStart > SUBMIT_WINDOW_MS) {
+    submitAttempts.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > SUBMIT_MAX;
+}
+
 async function verifyRecaptcha(token: string): Promise<boolean> {
   const secret = process.env.RECAPTCHA_SECRET_KEY;
   if (!secret) return true; // skip verification if not configured
@@ -28,6 +44,18 @@ async function verifyRecaptcha(token: string): Promise<boolean> {
 
 export async function POST(req: Request) {
   try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+      req.headers.get("x-real-ip") ??
+      "unknown";
+
+    if (isSubmitRateLimited(ip)) {
+      return new Response("Too Many Requests", {
+        status: 429,
+        headers: { "Retry-After": "900" },
+      });
+    }
+
     await connect();
 
     const json = await req.json().catch(() => null);
@@ -40,17 +68,21 @@ export async function POST(req: Request) {
 
     const { recaptchaToken, ...data } = parsed.data;
 
-    if (recaptchaToken) {
+    // When reCAPTCHA is configured, require the token
+    if (process.env.RECAPTCHA_SECRET_KEY) {
+      if (!recaptchaToken) {
+        return Response.json({ error: "reCAPTCHA token is required" }, { status: 400 });
+      }
       const valid = await verifyRecaptcha(recaptchaToken);
       if (!valid) return Response.json({ error: "Bot protection check failed. Please try again." }, { status: 403 });
     }
 
-    const doc = await Person.create(data);
-    return Response.json({ ok: true, id: doc._id, whatsappUrl: process.env.WHATSAPP_URL ?? null });
+    await Person.create(data);
+    return Response.json({ ok: true, whatsappUrl: process.env.WHATSAPP_URL ?? null });
   } catch (error) {
     console.error("Submit API error:", error);
     return Response.json(
-      { error: "Failed to create person", details: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }

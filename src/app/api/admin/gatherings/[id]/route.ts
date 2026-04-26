@@ -1,6 +1,6 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-import { requireAdmin } from "@/app/api/_auth";
+import { requireAdmin, isValidObjectId } from "@/app/api/_auth";
 
 import { NextRequest } from "next/server";
 import connect from "@/lib/mongo";
@@ -18,6 +18,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
   if (authError) return authError;
 
   const { id } = await context.params;
+  if (!isValidObjectId(id)) return new Response("Invalid ID", { status: 400 });
   await connect();
 
   const g = await Gathering.findById(id).lean() as Record<string, unknown> | null;
@@ -30,6 +31,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
   if (authError) return authError;
 
   const { id } = await context.params;
+  if (!isValidObjectId(id)) return new Response("Invalid ID", { status: 400 });
   await connect();
 
   const body = (await req.json()) as { tags?: string[]; notes?: string };
