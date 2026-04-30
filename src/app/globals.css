@@ -84,6 +84,10 @@ body {
   border-color: var(--green-600);
   box-shadow: 0 0 0 3px rgba(74,124,89,0.12);
 }
+.ismaili-input:focus-visible {
+  outline: 2px solid var(--green-600);
+  outline-offset: 1px;
+}
 
 /* ── Buttons ───────────────────────────────────────────────────────────── */
 .ismaili-button {
@@ -104,6 +108,10 @@ body {
   background: var(--green-900);
   box-shadow: 0 2px 8px rgba(26,48,9,0.25);
 }
+.ismaili-button:focus-visible {
+  outline: 2px solid var(--green-600);
+  outline-offset: 2px;
+}
 .ismaili-button-outline {
   display: inline-flex;
   align-items: center;
@@ -121,9 +129,20 @@ body {
 .ismaili-button-outline:hover {
   background: var(--green-100);
 }
+.ismaili-button-outline:focus-visible {
+  outline: 2px solid var(--green-800);
+  outline-offset: 2px;
+}
 .ismaili-button-outline:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ── Global keyboard focus ring (fallback for all other interactive elements) */
+*:focus-visible {
+  outline: 2px solid var(--green-600);
+  outline-offset: 2px;
+  border-radius: 3px;
 }
 
 /* ── Demo mode ─────────────────────────────────────────────────────────────── */

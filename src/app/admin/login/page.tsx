@@ -42,16 +42,18 @@ export default function AdminLogin() {
         </div>
         <form onSubmit={onSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium ismaili-text-primary mb-2">Password</label>
+            <label htmlFor="admin-password" className="block text-sm font-medium ismaili-text-primary mb-2">Password</label>
             <input
+              id="admin-password"
               className="ismaili-input w-full"
               type="password"
+              autoComplete="current-password"
               placeholder="Enter admin password"
               value={password}
               onChange={e => setPassword(e.target.value)}
             />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
           <button className="ismaili-button w-full text-lg py-3">Sign In</button>
         </form>
 

@@ -251,6 +251,8 @@ export default function GatheringDetail() {
           </div>
         </div>
         <input
+          id="gathering-notes"
+          aria-label="Gathering notes"
           className="mt-2 ismaili-input text-sm text-gray-600 w-full max-w-lg"
           placeholder="Add notes…"
           defaultValue={g.notes ?? ""}
@@ -268,9 +270,12 @@ export default function GatheringDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b">
+      <div className="flex gap-1 border-b" role="tablist" aria-label="Gathering sections">
         {(["varos","photos"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
+            role="tab"
+            aria-selected={tab === t}
+            aria-controls={`tabpanel-${t}`}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors capitalize ${
               tab === t
                 ? "border-[#2d5016] text-[#2d5016]"
@@ -283,7 +288,7 @@ export default function GatheringDetail() {
 
       {/* ── Varos tab ── */}
       {tab === "varos" && (
-        <div className="space-y-6">
+        <div id="tabpanel-varos" role="tabpanel" aria-label="Varos" className="space-y-6">
           {/* Template buttons */}
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-xs text-gray-500 font-medium">Load template:</span>
@@ -345,8 +350,9 @@ export default function GatheringDetail() {
 
           {/* Shoe count */}
           <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-700">Shoe Count</label>
+            <label htmlFor="shoe-count" className="text-sm font-medium text-gray-700">Shoe Count</label>
             <input
+              id="shoe-count"
               type="number"
               min={0}
               className="ismaili-input w-28 text-sm py-1.5 px-3"
@@ -360,14 +366,20 @@ export default function GatheringDetail() {
 
       {/* ── Assign modal ── */}
       {currentVaro && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={e => { if (e.target === e.currentTarget) setAssignOpenFor(null); }}>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="assign-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={e => { if (e.target === e.currentTarget) setAssignOpenFor(null); }}
+        >
           <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 flex flex-col max-h-[85vh]">
             {/* Modal header */}
             <div className="flex items-center justify-between px-4 py-3 border-b">
-              <h3 className="font-semibold text-sm">
+              <h3 id="assign-modal-title" className="font-semibold text-sm">
                 Assign — <span className="text-blue-700">{currentVaro.title}</span>
               </h3>
-              <button onClick={() => setAssignOpenFor(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
+              <button onClick={() => setAssignOpenFor(null)} aria-label="Close assignment panel" className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
             </div>
 
             {/* Recent assignment history */}
@@ -442,7 +454,7 @@ export default function GatheringDetail() {
                     >
                       {addingLoading ? "Adding…" : "Add & Select"}
                     </button>
-                    <button onClick={() => { setAddingNew(false); setNewName(""); }} className="text-gray-400 hover:text-gray-600 text-sm">✕</button>
+                    <button onClick={() => { setAddingNew(false); setNewName(""); }} aria-label="Cancel adding person" className="text-gray-400 hover:text-gray-600 text-sm">✕</button>
                   </div>
                 ) : (
                   <button
@@ -471,9 +483,10 @@ export default function GatheringDetail() {
 
       {/* ── Jamati Picture tab ── */}
       {tab === "photos" && (
-        <div className="space-y-4">
+        <div id="tabpanel-photos" role="tabpanel" aria-label="Jamati Pictures" className="space-y-4">
           {/* Upload area */}
           <label
+            aria-label="Upload photo files. Click or drag and drop images here."
             className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
               photoUploading
                 ? "border-gray-200 bg-gray-50"
@@ -525,7 +538,7 @@ export default function GatheringDetail() {
                   <div key={p._id} className="ismaili-card p-2 flex flex-col gap-2">
                     {isImage ? (
                       <a href={src} target="_blank" rel="noreferrer">
-                        <img src={src} alt={p.filename} className="w-full h-32 object-cover rounded" />
+                        <img src={src} alt={`Photo: ${p.filename}`} className="w-full h-32 object-cover rounded" />
                       </a>
                     ) : (
                       <a href={src} target="_blank" rel="noreferrer" className="flex items-center justify-center h-32 bg-gray-50 rounded text-3xl">

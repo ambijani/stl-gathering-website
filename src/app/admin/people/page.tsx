@@ -134,7 +134,7 @@ export default function PeoplePage() {
                 All Varos for <strong><BlurredName>{mergeFrom.name}</BlurredName></strong> will transfer to your chosen person, then <strong><BlurredName>{mergeFrom.name}</BlurredName></strong> will be deleted.
               </p>
             </div>
-            <button onClick={closeMerge} className="text-amber-400 hover:text-amber-600 text-lg leading-none">✕</button>
+            <button onClick={closeMerge} aria-label="Close merge panel" className="text-amber-400 hover:text-amber-600 text-lg leading-none">✕</button>
           </div>
           <input
             autoFocus
