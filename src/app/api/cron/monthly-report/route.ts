@@ -115,12 +115,13 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const secret        = process.env.CRON_SECRET;
 
-  if (secret) {
-    const cronAuth   = authHeader === `Bearer ${secret}`;
-    const manualAuth = searchParams.get("secret") === secret;
-    if (!cronAuth && !manualAuth) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  if (!secret) {
+    console.error("CRON_SECRET is not configured");
+    return Response.json({ error: "Server configuration error" }, { status: 500 });
+  }
+
+  if (authHeader !== `Bearer ${secret}`) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -134,7 +135,7 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error("Monthly report error:", error);
     return Response.json(
-      { error: "Failed to send report", details: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Failed to send report" },
       { status: 500 }
     );
   }

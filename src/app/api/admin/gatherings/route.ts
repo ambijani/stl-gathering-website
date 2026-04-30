@@ -14,14 +14,16 @@ function normalizeTags(doc: Record<string, unknown>): Record<string, unknown> {
 }
 
 export async function GET() {
-  await requireAdmin();
+  const authError = await requireAdmin();
+  if (authError) return authError;
   await connect();
   const rows = await Gathering.find().sort({ date: 1 }).lean() as Record<string, unknown>[];
   return Response.json(rows.map(normalizeTags));
 }
 
 export async function POST(request: NextRequest) {
-  await requireAdmin();
+  const authError = await requireAdmin();
+  if (authError) return authError;
   await connect();
   const body = (await request.json()) as { tags?: string[]; date?: string | Date; notes?: string };
 

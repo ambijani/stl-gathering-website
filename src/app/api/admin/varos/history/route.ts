@@ -8,7 +8,8 @@ import Gathering from "@/models/Gathering";
 import Person from "@/models/Person";
 
 export async function GET(request: NextRequest) {
-  await requireAdmin();
+  const authError = await requireAdmin();
+  if (authError) return authError;
   await connect();
 
   const { searchParams } = new URL(request.url);
