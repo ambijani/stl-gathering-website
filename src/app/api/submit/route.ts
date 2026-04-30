@@ -77,6 +77,19 @@ export async function POST(req: Request) {
       if (!valid) return Response.json({ error: "Bot protection check failed. Please try again." }, { status: 403 });
     }
 
+    // Duplicate detection: same name (case-insensitive) + same phone number
+    const nameRegex = new RegExp(`^${data.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+    const existing = await Person.findOne({
+      name: { $regex: nameRegex },
+      ...(data.phone ? { phone: data.phone } : {}),
+    });
+    if (existing) {
+      return Response.json(
+        { error: "It looks like you've already signed up. If you need to make changes, please contact an admin." },
+        { status: 409 }
+      );
+    }
+
     await Person.create(data);
     return Response.json({ ok: true, whatsappUrl: process.env.WHATSAPP_URL ?? null });
   } catch (error) {
