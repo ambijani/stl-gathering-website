@@ -9,6 +9,7 @@ type Gathering = { _id: string; tags?: string[]; date: string; notes?: string; v
 
 const FRIDAY_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
 const CHANDRAAT_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Chandraat Ginan", "Article of the Month", "Chandraat Tasbih", "Announcements", "Conclusion Dua"];
+const EID_VAROS = ["Eid Namaz Reciter", "Eid Namaz Announcement/Gist"];
 
 const GATHERING_TYPES = [
   "Friday Vaaros",
@@ -23,7 +24,7 @@ const TEMPLATES: { label: string; varos: string[]; border: string; text: string;
   { label: "Friday Vaaros",    varos: FRIDAY_VAROS,    border: "border-green-300",  text: "text-green-700",  hover: "hover:bg-green-50"  },
   { label: "Chandraat Vaaros", varos: CHANDRAAT_VAROS, border: "border-purple-300", text: "text-purple-700", hover: "hover:bg-purple-50" },
   { label: "Kushali",          varos: FRIDAY_VAROS,    border: "border-yellow-300", text: "text-yellow-700", hover: "hover:bg-yellow-50" },
-  { label: "Eid",              varos: FRIDAY_VAROS,    border: "border-blue-300",   text: "text-blue-700",   hover: "hover:bg-blue-50"   },
+  { label: "Eid",              varos: EID_VAROS,       border: "border-blue-300",   text: "text-blue-700",   hover: "hover:bg-blue-50"   },
   { label: "Taliqah",          varos: FRIDAY_VAROS,    border: "border-orange-300", text: "text-orange-700", hover: "hover:bg-orange-50" },
 ];
 
@@ -106,6 +107,17 @@ export default function GatheringDetail() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title }),
       });
+    }
+    setLoadingTemplate(false);
+    await loadGathering();
+  }
+
+  async function clearTemplate() {
+    if (!g || !g.varos?.length) return;
+    if (!confirm("Delete all varos and start fresh?")) return;
+    setLoadingTemplate(true);
+    for (const v of g.varos) {
+      await fetch(`/api/admin/gatherings/${id}/varos/${v._id}`, { method: "DELETE" });
     }
     setLoadingTemplate(false);
     await loadGathering();
@@ -303,6 +315,14 @@ export default function GatheringDetail() {
                 {t.label}
               </button>
             ))}
+            <button
+              type="button"
+              disabled={loadingTemplate || !g.varos?.length}
+              onClick={() => clearTemplate()}
+              className="px-3 py-1 text-xs rounded border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+            >
+              Clear
+            </button>
             {loadingTemplate && <span className="text-xs text-gray-400">Adding…</span>}
           </div>
 
