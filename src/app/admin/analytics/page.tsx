@@ -146,7 +146,7 @@ export default function Analytics() {
             onChange={e => setFreqSearch(e.target.value)}
           />
         </div>
-        <div className="flex flex-col sm:flex-row gap-6 items-start">
+        <div className="flex flex-col sm:flex-row gap-6 sm:items-start">
           {/* Chart */}
           <div className="flex-1 min-w-0">
             {freq.length === 0 ? (
