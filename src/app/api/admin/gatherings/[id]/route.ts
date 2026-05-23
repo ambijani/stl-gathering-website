@@ -44,3 +44,16 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
   if (!g) return new Response("Not found", { status: 404 });
   return Response.json(normalizeTags(g));
 }
+
+export async function DELETE(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
+  const { id } = await context.params;
+  if (!isValidObjectId(id)) return new Response("Invalid ID", { status: 400 });
+  await connect();
+
+  const g = await Gathering.findByIdAndDelete(id);
+  if (!g) return new Response("Not found", { status: 404 });
+  return new Response(null, { status: 204 });
+}

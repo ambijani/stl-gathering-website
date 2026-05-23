@@ -30,6 +30,8 @@ function typeBadges(tags?: string[]) {
   );
 }
 
+type DeleteTarget = { id: string; label: string };
+
 export default function GatheringsPage() {
   const [items, setItems] = useState<Gathering[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,10 @@ export default function GatheringsPage() {
   const [typeDropOpen, setTypeDropOpen] = useState(false);
   const [date, setDate] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
+
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [deleteInput, setDeleteInput] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -48,6 +54,17 @@ export default function GatheringsPage() {
   }
 
   useEffect(() => { void load(); }, []);
+
+  async function onDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const res = await fetch(`/api/admin/gatherings/${deleteTarget.id}`, { method: "DELETE" });
+    setDeleting(false);
+    if (!res.ok) { alert(`Failed to delete: ${await res.text()}`); return; }
+    setDeleteTarget(null);
+    setDeleteInput("");
+    await load();
+  }
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -128,9 +145,21 @@ export default function GatheringsPage() {
                     <td className="text-gray-500">{g.varos?.length ?? 0}</td>
                     <td className="text-gray-500">{totalPairs > 0 ? totalPairs : <span className="text-gray-300">—</span>}</td>
                     <td>
-                      <Link className="text-sm font-semibold ismaili-text-primary hover:underline" href={`/admin/gatherings/${g._id}`}>
-                        Manage →
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        <Link className="text-sm font-semibold ismaili-text-primary hover:underline" href={`/admin/gatherings/${g._id}`}>
+                          Manage →
+                        </Link>
+                        <button
+                          className="text-sm text-red-500 hover:text-red-700 font-medium"
+                          onClick={() => {
+                            const label = new Date(g.date).toLocaleDateString("en-US", { timeZone: "UTC" });
+                            setDeleteTarget({ id: g._id, label });
+                            setDeleteInput("");
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -141,6 +170,44 @@ export default function GatheringsPage() {
           </tbody>
         </table>
       </div>
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4 space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900">Delete Gathering</h2>
+            <p className="text-sm text-gray-600">
+              This will permanently delete the gathering on{" "}
+              <span className="font-semibold text-gray-900">{deleteTarget.label}</span> and all its data.
+            </p>
+            <p className="text-sm text-gray-600">
+              Type <span className="font-mono font-semibold text-gray-900">{deleteTarget.label}</span> to confirm.
+            </p>
+            <input
+              className="ismaili-input text-sm w-full font-mono"
+              placeholder={deleteTarget.label}
+              value={deleteInput}
+              onChange={e => setDeleteInput(e.target.value)}
+              autoFocus
+            />
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                className="text-sm px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+                onClick={() => { setDeleteTarget(null); setDeleteInput(""); }}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="text-sm px-4 py-2 rounded-lg bg-red-600 text-white font-semibold disabled:opacity-40 hover:bg-red-700 transition-colors"
+                disabled={deleteInput !== deleteTarget.label || deleting}
+                onClick={onDelete}
+              >
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
