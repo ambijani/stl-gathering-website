@@ -42,7 +42,7 @@ function AdminNav() {
     );
   };
 
-  const logoutCls = "inline-flex items-center rounded-full border border-white/45 bg-white/15 px-3.5 py-1 text-sm font-semibold text-white transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-800";
+  const logoutCls = "items-center rounded-full border border-white/45 bg-white/15 px-3.5 py-1 text-sm font-semibold text-white transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-800";
 
   return (
     <nav
@@ -54,7 +54,7 @@ function AdminNav() {
         <Link href="/admin" className="text-white font-bold text-base tracking-tight">
           STL Gathering
         </Link>
-        <button onClick={logout} className={`sm:hidden ${logoutCls}`}>Logout</button>
+        <button onClick={logout} className={`inline-flex sm:hidden ${logoutCls}`}>Logout</button>
       </div>
       {/* Row 2 on mobile / remainder of row on desktop: nav links + logout */}
       <div className="flex items-center gap-2 flex-wrap">
