@@ -42,23 +42,34 @@ function AdminNav() {
     );
   };
 
+  const logoutBtn = (className?: string) => (
+    <button
+      onClick={logout}
+      className={`inline-flex items-center rounded-full border border-white/45 bg-white/15 px-3.5 py-1 text-sm font-semibold text-white transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-800 ${className ?? ""}`}
+    >
+      Logout
+    </button>
+  );
+
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-3"
-      style={{ background: "linear-gradient(135deg,#1a3009 0%,#2d5016 100%)", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
-      <Link href="/admin" className="text-white font-bold text-base tracking-tight mr-6">
-        STL Gathering
-      </Link>
-      <div className="flex items-center gap-2">
+    <nav
+      className="sticky top-0 z-50 flex flex-col sm:flex-row sm:items-center px-4 py-3 gap-y-2"
+      style={{ background: "linear-gradient(135deg,#1a3009 0%,#2d5016 100%)", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}
+    >
+      {/* Row 1: title + logout (logout visible on mobile only) */}
+      <div className="flex items-center justify-between sm:justify-start sm:mr-6">
+        <Link href="/admin" className="text-white font-bold text-base tracking-tight">
+          STL Gathering
+        </Link>
+        {logoutBtn("sm:hidden")}
+      </div>
+      {/* Row 2 (mobile) / rest of row (desktop): nav links + logout */}
+      <div className="flex items-center gap-2 flex-wrap">
         {navLink("/admin/people", "People")}
         {navLink("/admin/gatherings", "Gatherings")}
         {navLink("/admin/analytics", "Analytics")}
+        {logoutBtn("hidden sm:inline-flex sm:ml-auto")}
       </div>
-      <button
-        onClick={logout}
-        className="ml-auto inline-flex items-center rounded-full border border-white/45 bg-white/15 px-3.5 py-1 text-sm font-semibold text-white transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-800"
-      >
-        Logout
-      </button>
     </nav>
   );
 }

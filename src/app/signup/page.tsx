@@ -101,9 +101,9 @@ export default function Signup() {
     <div className="min-h-screen ismaili-bg-pattern">
       {SITE_KEY && <Script src={`https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`} strategy="afterInteractive" />}
       <div className="ismaili-header">
-        <div className="container mx-auto px-4 flex items-start justify-between">
+        <div className="container mx-auto px-4 flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Join Our Community</h1>
+            <h1 className="text-2xl sm:text-4xl font-bold mb-2">Join Our Community</h1>
             <p className="text-lg opacity-90">Sign up for STL Ismaili gatherings and events</p>
           </div>
           <Link

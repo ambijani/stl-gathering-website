@@ -99,7 +99,7 @@ export default function Analytics() {
         <h2 className="text-xl font-semibold mb-1">Average Shoe Count by Month</h2>
         <p className="text-sm text-gray-500 mb-3">Average shoes per gathering, grouped by month</p>
         {scm.length === 0 ? <p className="text-gray-400 text-sm">No shoe count data yet.</p> : (
-          <div className="w-full h-80 border rounded p-2">
+          <div className="w-full h-52 sm:h-80 border rounded p-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={scm}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -117,7 +117,7 @@ export default function Analytics() {
       <section>
         <h2 className="text-xl font-semibold mb-2">Shoe Count per Date</h2>
         {pbd.length === 0 ? <p className="text-gray-400 text-sm">No shoe count data yet.</p> : (
-          <div className="w-full h-80 border rounded p-2">
+          <div className="w-full h-52 sm:h-80 border rounded p-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={pbd}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -140,13 +140,13 @@ export default function Analytics() {
           </div>
           <input
             aria-label="Search varo frequency by name"
-            className="ismaili-input text-sm w-56"
+            className="ismaili-input text-sm w-full sm:w-56"
             placeholder="Search name…"
             value={freqSearch}
             onChange={e => setFreqSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-6 items-start">
+        <div className="flex flex-col sm:flex-row gap-6 items-start">
           {/* Chart */}
           <div className="flex-1 min-w-0">
             {freq.length === 0 ? (
@@ -198,7 +198,7 @@ export default function Analytics() {
 
           {/* Inactive Members */}
           {inactive.length > 0 && (
-            <div className="w-72 shrink-0">
+            <div className="w-full sm:w-72 sm:shrink-0">
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="font-semibold text-sm">Inactive Members</h3>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
@@ -279,7 +279,7 @@ export default function Analytics() {
         </div>
         <div className="flex items-center gap-3 mb-4 flex-wrap">
           <input
-            className="ismaili-input text-sm flex-1 min-w-60"
+            className="ismaili-input text-sm w-full sm:flex-1"
             placeholder="Extra recipients (comma-separated emails)"
             value={extraRecipients}
             onChange={e => setExtraRecipients(e.target.value)}
@@ -301,7 +301,7 @@ export default function Analytics() {
         {reportLoading ? (
           <p className="text-gray-400 text-sm">Loading preview…</p>
         ) : reportData && (
-          <div className="ismaili-card overflow-hidden">
+          <div className="ismaili-card overflow-x-auto">
             <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
               <span className="font-semibold text-sm">{reportData.monthLabel}</span>
               <span className="text-gray-400 text-xs ml-2">— {reportData.gatherings.length} gathering{reportData.gatherings.length !== 1 ? "s" : ""}</span>

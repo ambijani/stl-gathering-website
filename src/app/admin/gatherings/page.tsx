@@ -94,7 +94,7 @@ export default function GatheringsPage() {
             <button
               type="button"
               onClick={() => setTypeDropOpen(o => !o)}
-              className="ismaili-input text-sm flex items-center gap-2 min-w-44"
+              className="ismaili-input text-sm flex items-center gap-2 w-full sm:min-w-44"
             >
               <span className="flex-1 text-left">{tags.length === 0 ? "Select type…" : tags.join(", ")}</span>
               <span className="text-gray-400">▾</span>
@@ -115,13 +115,13 @@ export default function GatheringsPage() {
             )}
           </div>
           <input className="ismaili-input text-sm" type="date" value={date} onChange={e => setDate(e.target.value)} required />
-          <input className="ismaili-input text-sm w-52" placeholder="Notes (optional)" value={notes} onChange={e => setNotes(e.target.value)} />
+          <input className="ismaili-input text-sm w-full sm:w-52" placeholder="Notes (optional)" value={notes} onChange={e => setNotes(e.target.value)} />
           <button className="ismaili-button text-sm py-2.5 px-5">+ Create</button>
         </form>
       </div>
 
       {/* Table */}
-      <div className="ismaili-card overflow-hidden">
+      <div className="ismaili-card overflow-x-auto">
         <table className="admin-table">
           <thead>
             <tr>

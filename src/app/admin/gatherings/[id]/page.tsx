@@ -231,7 +231,7 @@ export default function GatheringDetail() {
             <button
               type="button"
               onClick={() => setTagsOpen(o => !o)}
-              className="ismaili-input text-sm py-1.5 px-3 flex items-center gap-2 min-w-44 z-20 relative"
+              className="ismaili-input text-sm py-1.5 px-3 flex items-center gap-2 w-full sm:min-w-44 z-20 relative"
             >
               <span className="flex-1 text-left">{(g.tags ?? []).length === 0 ? "Select type…" : (g.tags ?? []).join(", ")}</span>
               <span className="text-gray-400">▾</span>
@@ -327,13 +327,13 @@ export default function GatheringDetail() {
           </div>
 
           {/* Varos table */}
-          <div className="ismaili-card overflow-hidden">
+          <div className="ismaili-card overflow-x-auto">
             <table className="admin-table">
               <thead>
                 <tr>
                   <th>Varo</th>
                   <th>Assigned</th>
-                  <th className="w-32"></th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>

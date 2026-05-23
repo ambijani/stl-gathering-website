@@ -116,7 +116,7 @@ export default function PeoplePage() {
             </button>
           )}
           <input
-            className="ismaili-input w-64 text-sm"
+            className="ismaili-input w-full sm:w-64 text-sm"
             placeholder="Search by name…"
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -176,7 +176,7 @@ export default function PeoplePage() {
       )}
 
       {/* Table */}
-      <div className="ismaili-card overflow-hidden">
+      <div className="ismaili-card overflow-x-auto">
         <table className="admin-table">
           <thead>
             <tr>
