@@ -40,9 +40,9 @@ export async function GET() {
     const pairsByDate = await Gathering.aggregate([
       { $match: { date: dateFilter } },
       { $unwind: { path: "$shoeCount", preserveNullAndEmptyArrays: true } },
-      { $group: { _id: "$date", pairs: { $sum: "$shoeCount.qty" } } },
+      { $group: { _id: "$_id", date: { $first: "$date" }, pairs: { $sum: "$shoeCount.qty" } } },
       { $match: { pairs: { $gt: 0 } } },
-      { $project: { date: "$_id", pairs: 1, _id: 0 } },
+      { $project: { date: 1, pairs: 1, _id: 0 } },
       { $sort: { date: 1 } }
     ]);
 
