@@ -10,6 +10,7 @@ type Gathering = { _id: string; tags?: string[]; date: string; notes?: string; v
 const FRIDAY_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
 const CHANDRAAT_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Chandraat Ginan", "Article of the Month", "Chandraat Tasbih", "Announcements", "Conclusion Dua"];
 const EID_VAROS = ["Eid Namaz Reciter", "Eid Namaz Announcement/Gist"];
+const TALIQAH_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Taliqah Ginan", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
 
 const GATHERING_TYPES = [
   "Friday Vaaros",
@@ -25,7 +26,7 @@ const TEMPLATES: { label: string; varos: string[]; border: string; text: string;
   { label: "Chandraat Vaaros", varos: CHANDRAAT_VAROS, border: "border-purple-300", text: "text-purple-700", hover: "hover:bg-purple-50" },
   { label: "Kushali",          varos: FRIDAY_VAROS,    border: "border-yellow-300", text: "text-yellow-700", hover: "hover:bg-yellow-50" },
   { label: "Eid",              varos: EID_VAROS,       border: "border-blue-300",   text: "text-blue-700",   hover: "hover:bg-blue-50"   },
-  { label: "Taliqah",          varos: FRIDAY_VAROS,    border: "border-orange-300", text: "text-orange-700", hover: "hover:bg-orange-50" },
+  { label: "Taliqah",          varos: TALIQAH_VAROS,   border: "border-orange-300", text: "text-orange-700", hover: "hover:bg-orange-50" },
 ];
 
 export default function GatheringDetail() {
