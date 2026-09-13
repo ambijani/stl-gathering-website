@@ -10,7 +10,7 @@ type PairsByDate      = { date: string; pairs: number };
 type VaroFrequency    = { name: string; count: number };
 type ShoeCountByMonth = { month: string; avg: number };
 type InactiveMember   = { _id: string; name: string; lastVaro: string | null };
-type ReportGathering  = { title: string; date: string; totalShoes: number; shoeBreakdown: { size: string; qty: number }[] };
+type ReportGathering  = { title: string; date: string; totalShoes: number; hasHappened: boolean; shoeBreakdown: { size: string; qty: number }[] };
 type ReportData       = { monthLabel: string; gatherings: ReportGathering[] };
 type OverviewRes = {
   pairsByDate:      PairsByDate[];
@@ -87,6 +87,7 @@ export default function Analytics() {
   }, []);
 
   const isDemo = useDemo();
+  const pastGatherings = reportData?.gatherings.filter(g => g.hasHappened) ?? [];
 
   if (loading) return <div className="admin-page text-gray-400">Loading…</div>;
 
@@ -318,31 +319,25 @@ export default function Analytics() {
                   </tr>
                 </thead>
                 <tbody>
-                  {reportData.gatherings.map((g, i) => {
-                    const hasHappened = new Date(g.date) <= new Date();
-                    return (
-                      <tr key={i}>
-                        <td className="font-medium">{g.title || "Gathering"}</td>
-                        <td className="text-gray-500 text-sm">
-                          {new Date(g.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" })}
-                        </td>
-                        <td className="text-center font-semibold">
-                          {hasHappened ? g.totalShoes : <span className="text-gray-300">—</span>}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {reportData.gatherings.map((g, i) => (
+                    <tr key={i}>
+                      <td className="font-medium">{g.title || "Gathering"}</td>
+                      <td className="text-gray-500 text-sm">
+                        {new Date(g.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" })}
+                      </td>
+                      <td className="text-center font-semibold">
+                        {g.hasHappened ? g.totalShoes : <span className="text-gray-300">—</span>}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
                 <tfoot>
                   <tr className="bg-gray-50 font-semibold">
                     <td colSpan={2}>Avg per gathering</td>
                     <td className="text-center">
-                      {(() => {
-                        const past = reportData.gatherings.filter(g => new Date(g.date) <= new Date());
-                        return past.length > 0
-                          ? (past.reduce((s, g) => s + g.totalShoes, 0) / past.length).toFixed(1)
-                          : "—";
-                      })()}
+                      {pastGatherings.length > 0
+                        ? (pastGatherings.reduce((s, g) => s + g.totalShoes, 0) / pastGatherings.length).toFixed(1)
+                        : "—"}
                     </td>
                   </tr>
                 </tfoot>

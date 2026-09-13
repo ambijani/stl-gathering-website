@@ -11,13 +11,14 @@ export function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]
       <tr>
         <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;">${g.title || "Gathering"}</td>
         <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;">${dateStr}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">${g.totalShoes}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">${g.hasHappened ? g.totalShoes : "—"}</td>
       </tr>`;
   }).join("");
 
-  const avg = gatherings.length
-    ? (gatherings.reduce((sum, g) => sum + g.totalShoes, 0) / gatherings.length).toFixed(1)
-    : "0";
+  const pastGatherings = gatherings.filter(g => g.hasHappened);
+  const avg = pastGatherings.length
+    ? (pastGatherings.reduce((sum, g) => sum + g.totalShoes, 0) / pastGatherings.length).toFixed(1)
+    : "—";
 
   const gatheringsWithPhotos = gatherings.filter(g => g.photos.length > 0);
   const photosSection = gatheringsWithPhotos.length > 0

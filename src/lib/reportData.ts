@@ -13,6 +13,7 @@ export type ReportGathering = {
   title: string;
   date: Date;
   totalShoes: number;
+  hasHappened: boolean;
   shoeBreakdown: { size: string; qty: number }[];
   photos: ReportPhoto[];
 };
@@ -48,12 +49,13 @@ export async function fetchReportData(month: number, year: number): Promise<Repo
     });
   }
 
+  const now = new Date();
   const gatherings: ReportGathering[] = raw.map(g => {
     const shoeBreakdown = (g.shoeCount ?? []).filter((s: { size: string; qty: number }) => s.qty > 0);
     const totalShoes    = shoeBreakdown.reduce((sum: number, s: { size: string; qty: number }) => sum + s.qty, 0);
     const photos        = photosByGathering[(g._id as { toString(): string }).toString()] ?? [];
     const tags = Array.isArray(g.tags) ? (g.tags as string[]) : (g.title ? [g.title as string] : []);
-    return { title: tags.join(", ") || "Gathering", date: g.date, totalShoes, shoeBreakdown, photos };
+    return { title: tags.join(", ") || "Gathering", date: g.date, totalShoes, hasHappened: g.date <= now, shoeBreakdown, photos };
   });
 
   return { monthLabel, gatherings };
