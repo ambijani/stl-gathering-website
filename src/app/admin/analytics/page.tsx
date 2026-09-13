@@ -318,21 +318,31 @@ export default function Analytics() {
                   </tr>
                 </thead>
                 <tbody>
-                  {reportData.gatherings.map((g, i) => (
-                    <tr key={i}>
-                      <td className="font-medium">{g.title || "Gathering"}</td>
-                      <td className="text-gray-500 text-sm">
-                        {new Date(g.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" })}
-                      </td>
-                      <td className="text-center font-semibold">{g.totalShoes}</td>
-                    </tr>
-                  ))}
+                  {reportData.gatherings.map((g, i) => {
+                    const hasHappened = new Date(g.date) <= new Date();
+                    return (
+                      <tr key={i}>
+                        <td className="font-medium">{g.title || "Gathering"}</td>
+                        <td className="text-gray-500 text-sm">
+                          {new Date(g.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" })}
+                        </td>
+                        <td className="text-center font-semibold">
+                          {hasHappened ? g.totalShoes : <span className="text-gray-300">—</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
                 <tfoot>
                   <tr className="bg-gray-50 font-semibold">
                     <td colSpan={2}>Avg per gathering</td>
                     <td className="text-center">
-                      {(reportData.gatherings.reduce((s, g) => s + g.totalShoes, 0) / reportData.gatherings.length).toFixed(1)}
+                      {(() => {
+                        const past = reportData.gatherings.filter(g => new Date(g.date) <= new Date());
+                        return past.length > 0
+                          ? (past.reduce((s, g) => s + g.totalShoes, 0) / past.length).toFixed(1)
+                          : "—";
+                      })()}
                     </td>
                   </tr>
                 </tfoot>
