@@ -3,7 +3,7 @@ import sharp from "sharp";
 import { fetchReportData, ReportGathering } from "@/lib/reportData";
 
 const MAX_PHOTO_WIDTH = 500; // photos display at 200px wide; 500px covers retina screens
-const JPEG_QUALITY = 85;
+const JPEG_QUALITY = 100;
 
 async function compressPhoto(data: Buffer, contentType: string): Promise<{ data: Buffer; contentType: string }> {
   // Animated GIFs would lose their animation if re-encoded as JPEG, so leave them as-is.
