@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // sharp's native linux binary isn't picked up by Next's file tracing by default,
+  // which breaks it at runtime on Vercel (routes that compress report photos).
+  outputFileTracingIncludes: {
+    "/api/admin/report": ["./node_modules/@img/sharp-linux-x64/**/*", "./node_modules/@img/sharp-libvips-linux-x64/**/*"],
+    "/api/cron/monthly-report": ["./node_modules/@img/sharp-linux-x64/**/*", "./node_modules/@img/sharp-libvips-linux-x64/**/*"],
+  },
   async headers() {
     return [
       {

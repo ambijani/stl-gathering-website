@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { requireAdmin } from "@/app/api/_auth";
 import { fetchReportData } from "@/lib/reportData";
-import { sendReport } from "@/app/api/cron/monthly-report/route";
+import { sendReport } from "@/lib/monthlyReport";
 
 // GET /api/admin/report?month=2&year=2026  → preview data (no email sent)
 export async function GET(req: Request) {
