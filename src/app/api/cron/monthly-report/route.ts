@@ -2,7 +2,23 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import nodemailer from "nodemailer";
+import sharp from "sharp";
 import { fetchReportData, ReportGathering } from "@/lib/reportData";
+
+const MAX_PHOTO_WIDTH = 500; // photos display at 200px wide; 500px covers retina screens
+const JPEG_QUALITY = 70;
+
+async function compressPhoto(data: Buffer, contentType: string): Promise<{ data: Buffer; contentType: string }> {
+  // Animated GIFs would lose their animation if re-encoded as JPEG, so leave them as-is.
+  if (contentType === "image/gif") return { data, contentType };
+
+  const compressed = await sharp(data)
+    .resize({ width: MAX_PHOTO_WIDTH, withoutEnlargement: true })
+    .jpeg({ quality: JPEG_QUALITY })
+    .toBuffer();
+
+  return { data: compressed, contentType: "image/jpeg" };
+}
 
 export function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]) {
   const rows = gatherings.map(g => {
@@ -91,13 +107,18 @@ export async function sendReport(month: number, year: number, extraRecipients: s
     auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
   });
 
-  const attachments = gatherings.flatMap(g =>
-    g.photos.map(p => ({
-      filename: p.filename,
-      content: p.data,
-      contentType: p.contentType,
-      cid: p.cid,
-    }))
+  const attachments = await Promise.all(
+    gatherings.flatMap(g =>
+      g.photos.map(async p => {
+        const { data, contentType } = await compressPhoto(p.data, p.contentType);
+        return {
+          filename: p.filename,
+          content: data,
+          contentType,
+          cid: p.cid,
+        };
+      })
+    )
   );
 
   await transporter.sendMail({
