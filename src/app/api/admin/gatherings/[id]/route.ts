@@ -5,6 +5,7 @@ import { requireAdmin, isValidObjectId } from "@/app/api/_auth";
 import { NextRequest } from "next/server";
 import connect from "@/lib/mongo";
 import Gathering from "@/models/Gathering";
+import Photo from "@/models/Photo";
 
 function normalizeTags(doc: Record<string, unknown>): Record<string, unknown> {
   if (!Array.isArray(doc.tags)) {
@@ -55,5 +56,6 @@ export async function DELETE(_req: NextRequest, context: { params: Promise<{ id:
 
   const g = await Gathering.findByIdAndDelete(id);
   if (!g) return new Response("Not found", { status: 404 });
+  await Photo.deleteMany({ gatheringId: id });
   return new Response(null, { status: 204 });
 }

@@ -5,6 +5,8 @@ import { requireAdmin, isValidObjectId } from "@/app/api/_auth";
 import { NextRequest } from "next/server";
 import connect from "@/lib/mongo";
 import Person from "@/models/Person";
+import Gathering from "@/models/Gathering";
+import mongoose from "mongoose";
 
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const authError = await requireAdmin();
@@ -35,5 +37,12 @@ export async function DELETE(_req: NextRequest, context: { params: Promise<{ id:
 
   const doc = await Person.findByIdAndDelete(id).lean();
   if (!doc) return new Response("Not found", { status: 404 });
+
+  // Remove them from every Varo so no dangling IDs are left behind
+  const oid = new mongoose.Types.ObjectId(id);
+  await Gathering.updateMany(
+    { "varos.assignedPeople": oid },
+    { $pull: { "varos.$[].assignedPeople": oid } }
+  );
   return Response.json({ ok: true });
 }

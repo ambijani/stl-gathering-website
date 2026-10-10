@@ -10,6 +10,8 @@ async function compressPhoto(data: Buffer, contentType: string): Promise<{ data:
   if (contentType === "image/gif") return { data, contentType };
 
   const compressed = await sharp(data)
+    // Bake in EXIF orientation; it's stripped on re-encode, which would leave phone photos sideways.
+    .autoOrient()
     .resize({ width: MAX_PHOTO_WIDTH, withoutEnlargement: true })
     .jpeg({ quality: JPEG_QUALITY })
     .toBuffer();
@@ -107,7 +109,11 @@ export async function sendReport(month: number, year: number, extraRecipients: s
   const attachments = await Promise.all(
     gatherings.flatMap(g =>
       g.photos.map(async p => {
-        const { data, contentType } = await compressPhoto(p.data, p.contentType);
+        // Don't let one bad photo block the whole report; fall back to the original.
+        const { data, contentType } = await compressPhoto(p.data, p.contentType).catch(err => {
+          console.error(`Failed to compress photo "${p.filename}"; attaching original:`, err);
+          return { data: p.data, contentType: p.contentType };
+        });
         return {
           filename: p.filename,
           content: data,

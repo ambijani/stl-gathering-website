@@ -17,8 +17,14 @@ export async function GET(req: Request) {
 
   try {
     const data = await fetchReportData(month, year);
-    return Response.json(data);
+    // Preview doesn't render photos; sending their raw bytes blows past Vercel's response size limit.
+    const gatherings = data.gatherings.map(g => ({
+      ...g,
+      photos: g.photos.map(p => ({ cid: p.cid, filename: p.filename, contentType: p.contentType })),
+    }));
+    return Response.json({ ...data, gatherings });
   } catch (error) {
+    console.error("Report preview error:", error);
     return Response.json({ error: "Failed to fetch report data" }, { status: 500 });
   }
 }

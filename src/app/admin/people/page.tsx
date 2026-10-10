@@ -1,11 +1,9 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { BlurredName, useDemo } from "@/components/DemoContext";
 
 type Person = { _id: string; name: string; phone?: string; interests?: string[]; createdAt?: string };
 
 export default function PeoplePage() {
-  const isDemo    = useDemo();
   const [people, setPeople]   = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState("");
@@ -107,7 +105,7 @@ export default function PeoplePage() {
           {!loading && <p className="text-sm text-gray-500 mt-0.5">{people.length} members</p>}
         </div>
         <div className="flex items-center gap-2">
-          {!loading && !isDemo && (
+          {!loading && (
             <button
               onClick={exportCsv}
               className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-3.5 py-1 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
@@ -131,7 +129,7 @@ export default function PeoplePage() {
             <div>
               <p className="font-semibold text-sm text-amber-900">Merge person</p>
               <p className="text-sm text-amber-800 mt-0.5">
-                All Varos for <strong><BlurredName>{mergeFrom.name}</BlurredName></strong> will transfer to your chosen person, then <strong><BlurredName>{mergeFrom.name}</BlurredName></strong> will be deleted.
+                All Varos for <strong>{mergeFrom.name}</strong> will transfer to your chosen person, then <strong>{mergeFrom.name}</strong> will be deleted.
               </p>
             </div>
             <button onClick={closeMerge} aria-label="Close merge panel" className="text-amber-400 hover:text-amber-600 text-lg leading-none">✕</button>
@@ -150,8 +148,8 @@ export default function PeoplePage() {
                 : mergeCandidates.map(p => (
                   <li key={p._id} className="px-3 py-2 cursor-pointer hover:bg-gray-50 flex justify-between items-center"
                     onClick={() => { setMergeTarget(p); setMergeSearch(p.name); }}>
-                    <span><BlurredName>{p.name}</BlurredName></span>
-                    {p.phone && <span className="text-xs text-gray-400"><BlurredName>{p.phone}</BlurredName></span>}
+                    <span>{p.name}</span>
+                    {p.phone && <span className="text-xs text-gray-400">{p.phone}</span>}
                   </li>
                 ))}
             </ul>
@@ -159,9 +157,9 @@ export default function PeoplePage() {
           {mergeTarget && (
             <div className="flex items-center gap-3 flex-wrap">
               <p className="text-sm">
-                <span className="line-through text-gray-400"><BlurredName>{mergeFrom.name}</BlurredName></span>
+                <span className="line-through text-gray-400">{mergeFrom.name}</span>
                 {" → "}
-                <span className="font-semibold text-green-800"><BlurredName>{mergeTarget.name}</BlurredName></span>
+                <span className="font-semibold text-green-800">{mergeTarget.name}</span>
               </p>
               <button onClick={confirmMerge} disabled={merging}
                 className="px-4 py-1.5 rounded-lg bg-amber-600 text-white text-sm font-semibold disabled:opacity-50 hover:bg-amber-700 transition-colors">
@@ -209,8 +207,8 @@ export default function PeoplePage() {
                 </tr>
               ) : (
                 <tr key={p._id} className={mergeFrom?._id === p._id ? "bg-amber-50" : ""}>
-                  <td className="font-medium text-gray-900"><BlurredName>{p.name}</BlurredName></td>
-                  <td className="text-gray-500"><BlurredName>{p.phone || "—"}</BlurredName></td>
+                  <td className="font-medium text-gray-900">{p.name}</td>
+                  <td className="text-gray-500">{p.phone || "—"}</td>
                   <td className="text-gray-400 text-xs">{(p.interests ?? []).join(", ") || "—"}</td>
                   <td>
                     <div className="flex gap-3">

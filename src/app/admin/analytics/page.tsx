@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { BlurredName, useDemo } from "@/components/DemoContext";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
   BarChart, Bar, ResponsiveContainer, Cell,
@@ -86,7 +85,6 @@ export default function Analytics() {
     })();
   }, []);
 
-  const isDemo = useDemo();
   const pastGatherings = reportData?.gatherings.filter(g => g.hasHappened) ?? [];
 
   if (loading) return <div className="admin-page text-gray-400">Loading…</div>;
@@ -176,7 +174,6 @@ export default function Analytics() {
                             fontSize={match ? 13 : 12}
                             fontWeight={match ? 700 : 400}
                             fill={match ? "#111827" : "#4b5563"}
-                            style={isDemo ? { filter: "blur(5px)" } : undefined}
                           >
                             {payload.value}
                           </text>
@@ -233,7 +230,7 @@ export default function Analytics() {
                         : null;
                       return (
                         <tr key={m._id}>
-                          <td className="font-medium text-xs"><BlurredName>{m.name}</BlurredName></td>
+                          <td className="font-medium text-xs">{m.name}</td>
                           <td>
                             {daysSince !== null ? (
                               <span className={`font-semibold text-xs ${daysSince >= 60 ? "text-red-600" : "text-amber-600"}`}>

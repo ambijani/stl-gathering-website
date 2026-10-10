@@ -17,8 +17,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const photo = await Photo.findById(photoId).select("data contentType filename");
     if (!photo) return new Response("Not found", { status: 404 });
 
-    console.log("photo.data type:", typeof photo.data, photo.data?.constructor?.name);
-
     const buf = Buffer.isBuffer(photo.data)
       ? photo.data
       : Buffer.from(photo.data as unknown as ArrayBuffer);

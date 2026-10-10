@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { requireAdmin, isDemoMode } from "@/app/api/_auth";
+import { requireAdmin } from "@/app/api/_auth";
 import connect from "@/lib/mongo";
 import Person from "@/models/Person";
 
@@ -11,10 +11,6 @@ export async function GET() {
 
   await connect();
   const rows = await Person.find().sort({ name: 1 }).lean();
-
-  if (await isDemoMode()) {
-    return Response.json(rows.map(({ phone: _phone, ...rest }) => rest));
-  }
   return Response.json(rows);
 }
 

@@ -1,15 +1,17 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-import { requireAdmin } from "@/app/api/_auth";
+import { requireAdmin, isValidObjectId } from "@/app/api/_auth";
 
 import { NextRequest } from "next/server";
 import connect from "@/lib/mongo";
 import Gathering from "@/models/Gathering";
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
+  const authError = await requireAdmin();
+  if (authError) return authError;
   const { id } = await context.params;
-  await connect();  
+  if (!isValidObjectId(id)) return new Response("Invalid ID", { status: 400 });
+  await connect();
 
   const body = (await request.json()) as { items?: { size: string; qty: number }[] };
   const items = Array.isArray(body.items) ? body.items : [];

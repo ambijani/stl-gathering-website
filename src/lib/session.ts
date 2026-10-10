@@ -25,51 +25,41 @@ function bufToHex(buf: ArrayBuffer | Uint8Array): string {
     .join("");
 }
 
-/** Create a signed session token: `<nonce>.<hmac-hex>` */
+export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8; // 8 hours
+
+/** Create a signed session token: `<expiry-unix-seconds>.<nonce>.<hmac-hex>` */
 export async function createSessionToken(): Promise<string> {
   const secret = getSecret();
+  const expiry = Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SECONDS;
   const nonce = bufToHex(globalThis.crypto.getRandomValues(new Uint8Array(16)));
+  const payload = `${expiry}.${nonce}`;
   const key = await getKey(secret);
-  const sig = await globalThis.crypto.subtle.sign("HMAC", key, new TextEncoder().encode(nonce));
-  return `${nonce}.${bufToHex(sig)}`;
+  const sig = await globalThis.crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+  return `${payload}.${bufToHex(sig)}`;
 }
 
-/** Create a signed demo session token: `demo.<nonce>.<hmac-hex>` */
-export async function createDemoSessionToken(): Promise<string> {
-  const secret = getSecret();
-  const nonce = `demo.${bufToHex(globalThis.crypto.getRandomValues(new Uint8Array(16)))}`;
-  const key = await getKey(secret);
-  const sig = await globalThis.crypto.subtle.sign("HMAC", key, new TextEncoder().encode(nonce));
-  return `${nonce}.${bufToHex(sig)}`;
-}
-
-/** Returns true if the token is a demo session (nonce starts with "demo."). */
-export function isDemoToken(token: string | undefined): boolean {
-  if (!token) return false;
-  const dot = token.lastIndexOf(".");
-  if (dot === -1) return false;
-  return token.slice(0, dot).startsWith("demo.");
-}
-
-/** Verify a session token. Returns true only if the HMAC signature is valid. */
+/** Verify a session token. Returns true only if the HMAC signature is valid and it hasn't expired. */
 export async function verifySessionToken(token: string | undefined): Promise<boolean> {
   if (!process.env.SESSION_SECRET || !token) return false;
   const dot = token.lastIndexOf(".");
   if (dot === -1) return false;
-  const nonce = token.slice(0, dot);
+  const payload = token.slice(0, dot);
   const providedSigHex = token.slice(dot + 1);
-  if (!nonce || !providedSigHex) return false;
+  // Strict format check also rejects legacy tokens (no expiry) and old demo-mode tokens.
+  const match = /^(\d+)\.[0-9a-f]{32}$/.exec(payload);
+  if (!match || !/^[0-9a-f]{64}$/.test(providedSigHex)) return false;
+  if (Number(match[1]) * 1000 <= Date.now()) return false;
   try {
     const secret = getSecret();
     const key = await getKey(secret);
     const providedSigBytes = new Uint8Array(
       providedSigHex.match(/.{2}/g)!.map((h) => parseInt(h, 16))
     );
-    return globalThis.crypto.subtle.verify(
+    return await globalThis.crypto.subtle.verify(
       "HMAC",
       key,
       providedSigBytes,
-      new TextEncoder().encode(nonce)
+      new TextEncoder().encode(payload)
     );
   } catch {
     return false;
