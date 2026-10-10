@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
-import { createSessionToken } from "@/lib/session";
+import { createSessionToken, SESSION_MAX_AGE_SECONDS } from "@/lib/session";
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const MAX_ATTEMPTS = 10;
@@ -38,8 +38,13 @@ export async function POST(req: Request) {
       });
     }
 
-    const input = await req.text();
     const envPwd = process.env.ADMIN_PASSWORD ?? "";
+    if (!envPwd) {
+      console.error("ADMIN_PASSWORD is not set; refusing all logins");
+      return new Response("Server configuration error", { status: 500 });
+    }
+
+    const input = await req.text();
 
     const a = Buffer.from(input);
     const b = Buffer.from(envPwd);
@@ -53,7 +58,7 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 60 * 60 * 8, // 8 hours
+      maxAge: SESSION_MAX_AGE_SECONDS,
     });
     return res;
   } catch (error) {

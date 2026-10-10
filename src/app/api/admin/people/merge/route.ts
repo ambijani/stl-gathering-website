@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { requireAdmin } from "@/app/api/_auth";
+import { requireAdmin, isValidObjectId } from "@/app/api/_auth";
 import { NextRequest } from "next/server";
 import connect from "@/lib/mongo";
 import Person from "@/models/Person";
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
   const { fromId, toId } = (await req.json()) as { fromId?: string; toId?: string };
   if (!fromId || !toId) return new Response("fromId and toId required", { status: 400 });
   if (fromId === toId)  return new Response("fromId and toId must be different", { status: 400 });
+  if (!isValidObjectId(fromId) || !isValidObjectId(toId)) return new Response("Invalid ID", { status: 400 });
 
   const fromOid = new mongoose.Types.ObjectId(fromId);
   const toOid   = new mongoose.Types.ObjectId(toId);

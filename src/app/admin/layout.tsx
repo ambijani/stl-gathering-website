@@ -1,21 +1,6 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { DemoProvider, useDemo } from "@/components/DemoContext";
-
-function DemoBanner() {
-  const isDemo = useDemo();
-  if (!isDemo) return null;
-  return (
-    <div className="border-b border-amber-200 bg-amber-50 px-6 py-2 text-center text-sm text-amber-800">
-      Demo mode — browsing is read-only.{" "}
-      <Link href="/admin/login" className="font-semibold underline underline-offset-2">
-        Sign in
-      </Link>{" "}
-      with the admin password to make changes.
-    </div>
-  );
-}
 
 function AdminNav() {
   const pathname = usePathname();
@@ -73,10 +58,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (pathname === "/admin/login") return <>{children}</>;
 
   return (
-    <DemoProvider>
+    <>
       <AdminNav />
-      <DemoBanner />
       {children}
-    </DemoProvider>
+    </>
   );
 }

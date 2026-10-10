@@ -29,6 +29,12 @@ function isSubmitRateLimited(ip: string): boolean {
   return entry.count > SUBMIT_MAX;
 }
 
+/** Digits only, without a leading US country code, so formatting differences don't matter. */
+function normalizePhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
+}
+
 async function verifyRecaptcha(token: string): Promise<boolean> {
   const secret = process.env.RECAPTCHA_SECRET_KEY;
   if (!secret) return true; // skip verification if not configured
@@ -36,10 +42,10 @@ async function verifyRecaptcha(token: string): Promise<boolean> {
   const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `secret=${secret}&response=${token}`,
+    body: new URLSearchParams({ secret, response: token }),
   });
   const data = await res.json() as { success: boolean; score: number; action: string };
-  return data.success && data.score >= 0.5;
+  return data.success && data.action === "submit" && data.score >= 0.5;
 }
 
 export async function POST(req: Request) {
@@ -77,17 +83,18 @@ export async function POST(req: Request) {
       if (!valid) return Response.json({ error: "Bot protection check failed. Please try again." }, { status: 403 });
     }
 
-    // Duplicate detection: same name (case-insensitive) + same phone number
-    const nameRegex = new RegExp(`^${data.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
-    const existing = await Person.findOne({
-      name: { $regex: nameRegex },
-      ...(data.phone ? { phone: data.phone } : {}),
-    });
-    if (existing) {
-      return Response.json(
-        { error: "It looks like you've already signed up. If you need to make changes, please contact an admin." },
-        { status: 409 }
-      );
+    // Duplicate detection: same name (case-insensitive) + same phone number. Signups without a phone
+    // aren't blocked, since a name alone can't tell namesakes apart; admins can merge real duplicates.
+    const phone = normalizePhone(data.phone ?? "");
+    if (phone) {
+      const nameRegex = new RegExp(`^${data.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+      const sameName = await Person.find({ name: { $regex: nameRegex } }).select("phone").lean<{ phone?: string }[]>();
+      if (sameName.some(p => normalizePhone(p.phone ?? "") === phone)) {
+        return Response.json(
+          { error: "It looks like you've already signed up. If you need to make changes, please contact an admin." },
+          { status: 409 }
+        );
+      }
     }
 
     await Person.create(data);

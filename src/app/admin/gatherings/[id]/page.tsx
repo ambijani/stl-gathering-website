@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { BlurredName } from "@/components/DemoContext";
 import { useParams } from "next/navigation";
+import { shrinkPhotoForUpload } from "@/lib/photoUpload";
 
 type Person = { _id: string; name: string; email?: string; interests?: string[] };
 type Varo = { _id: string; title: string; assignedPeople?: string[] };
@@ -51,12 +51,15 @@ export default function GatheringDetail() {
     setPhotoUploading(true);
     try {
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", await shrinkPhotoForUpload(file));
       const res = await fetch(`/api/admin/gatherings/${id}/photos`, { method: "POST", body: form });
-      if (!res.ok) throw new Error("Upload failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null) as { error?: string } | null;
+        throw new Error(data?.error ?? "Upload failed.");
+      }
       await loadPhotos();
-    } catch {
-      alert("Upload failed.");
+    } catch (err) {
+      alert(`${file.name}: ${err instanceof Error ? err.message : "Upload failed."}`);
     }
     setPhotoUploading(false);
   }
@@ -209,11 +212,12 @@ export default function GatheringDetail() {
   }, [g]);
 
   async function saveShoeCount(val: number) {
-    await fetch(`/api/admin/gatherings/${id}/shoecount`, {
+    const res = await fetch(`/api/admin/gatherings/${id}/shoecount`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items: [{ size: "total", qty: val }] }),
     });
+    if (!res.ok) alert("Failed to save shoe count.");
   }
 
   if (!g) return <div className="admin-page text-gray-400">Loading…</div>;
@@ -350,7 +354,7 @@ export default function GatheringDetail() {
                       <td className="text-gray-500 text-sm">
                         {names.length === 0
                           ? <span className="text-gray-300 italic">None</span>
-                          : <BlurredName><span title={names.join(", ")}>{preview}</span></BlurredName>
+                          : <span title={names.join(", ")}>{preview}</span>
                         }
                       </td>
                       <td>
@@ -418,7 +422,7 @@ export default function GatheringDetail() {
                           <span className="text-gray-400 shrink-0">{dateStr}</span>
                           {entry.assigned.length === 0
                             ? <span className="text-gray-300 italic">unassigned</span>
-                            : <BlurredName><span className="text-gray-700">{entry.assigned.map(p => p.name).join(", ")}</span></BlurredName>
+                            : <span className="text-gray-700">{entry.assigned.map(p => p.name).join(", ")}</span>
                           }
                         </div>
                       );
@@ -449,7 +453,7 @@ export default function GatheringDetail() {
                     checked={!!selected[p._id]}
                     onChange={() => setSelected(s => ({ ...s, [p._id]: !s[p._id] }))}
                   />
-                  <span className="text-sm"><BlurredName>{p.name}</BlurredName></span>
+                  <span className="text-sm">{p.name}</span>
                 </label>
               ))}
               {!filteredPeople.length && (
@@ -528,7 +532,7 @@ export default function GatheringDetail() {
             <input
               type="file"
               className="hidden"
-              accept="*/*"
+              accept="image/jpeg,image/png,image/webp,image/gif"
               multiple
               disabled={photoUploading}
               onChange={async e => {
@@ -542,7 +546,7 @@ export default function GatheringDetail() {
             ) : (
               <>
                 <p className="text-sm font-medium text-gray-600">{dragOver ? "Drop to upload" : "Click or drag & drop to upload"}</p>
-                <p className="text-xs text-gray-400 mt-1">Images, videos, PDFs — any file type</p>
+                <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WebP, or GIF — large photos are resized automatically</p>
               </>
             )}
           </label>
