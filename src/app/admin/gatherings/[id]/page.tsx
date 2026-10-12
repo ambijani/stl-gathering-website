@@ -572,34 +572,60 @@ export default function GatheringDetail() {
                       </a>
                     )}
                     {renamingId === p._id ? (
-                      <div className="flex gap-1 items-center">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-medium text-gray-600" htmlFor={`rename-${p._id}`}>New name</label>
                         <input
+                          id={`rename-${p._id}`}
                           autoFocus
-                          className="border rounded px-1.5 py-0.5 text-xs flex-1 min-w-0"
+                          className="border border-gray-300 rounded px-2 py-1 text-xs w-full min-w-0 focus:outline-none focus:ring-2 focus:ring-green-700"
                           value={renameValue}
+                          onFocus={e => {
+                            // Select only the name, keeping the extension (e.g. ".jpg") intact
+                            const dot = e.target.value.lastIndexOf(".");
+                            e.target.setSelectionRange(0, dot > 0 ? dot : e.target.value.length);
+                          }}
                           onChange={e => setRenameValue(e.target.value)}
-                          onKeyDown={e => { if (e.key === "Enter") void renamePhoto(p._id); if (e.key === "Escape") setRenamingId(null); }}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") void renamePhoto(p._id);
+                            if (e.key === "Escape") setRenamingId(null);
+                          }}
                         />
-                        <button onClick={() => void renamePhoto(p._id)} className="text-xs font-semibold text-green-800 hover:text-green-900">✓</button>
-                        <button onClick={() => setRenamingId(null)} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
+                        <div className="flex gap-2 items-center">
+                          <button
+                            onClick={() => void renamePhoto(p._id)}
+                            disabled={!renameValue.trim()}
+                            className="text-xs font-semibold text-white bg-green-800 hover:bg-green-900 disabled:opacity-40 disabled:cursor-not-allowed rounded px-2.5 py-1"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setRenamingId(null)}
+                            className="text-xs text-gray-600 hover:text-gray-900 rounded px-2.5 py-1 border border-gray-300"
+                          >
+                            Cancel
+                          </button>
+                          <span className="text-[11px] text-gray-400 ml-auto">Enter saves · Esc cancels</span>
+                        </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-gray-500 truncate cursor-pointer hover:text-gray-800" title={p.filename} onClick={() => { setRenamingId(p._id); setRenameValue(p.filename); }}>{p.filename}</p>
+                      <p className="text-xs text-gray-500 truncate" title={p.filename}>{p.filename}</p>
                     )}
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => { setRenamingId(p._id); setRenameValue(p.filename); }}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                      >
-                        Rename
-                      </button>
-                      <button
-                        onClick={() => deletePhoto(p._id, p.filename)}
-                        className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    {renamingId !== p._id && (
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => { setRenamingId(p._id); setRenameValue(p.filename); }}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                        >
+                          Rename
+                        </button>
+                        <button
+                          onClick={() => deletePhoto(p._id, p.filename)}
+                          className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
