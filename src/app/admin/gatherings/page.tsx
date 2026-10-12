@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { redirectIfUnauthorized } from "@/lib/adminClient";
 
 type Varo = { _id: string; title: string; capacity?: number; assignedPeople?: string[] };
 type Gathering = { _id: string; tags?: string[]; date: string; notes?: string; varos: Varo[]; shoeCount: { size: string; qty: number }[] };
@@ -48,6 +49,11 @@ export default function GatheringsPage() {
   async function load() {
     setLoading(true);
     const res = await fetch("/api/admin/gatherings", { cache: "no-store" });
+    if (!res.ok) {
+      if (!redirectIfUnauthorized(res)) alert("Could not load gatherings. Please refresh the page.");
+      setLoading(false);
+      return;
+    }
     const data = (await res.json()) as Gathering[];
     setItems([...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
     setLoading(false);

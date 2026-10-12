@@ -2,16 +2,17 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { shrinkPhotoForUpload } from "@/lib/photoUpload";
+import { redirectIfUnauthorized } from "@/lib/adminClient";
 
 type Person = { _id: string; name: string; interests?: string[] };
 type Varo = { _id: string; title: string; assignedPeople?: string[] };
 type Gathering = { _id: string; tags?: string[]; date: string; notes?: string; varos: Varo[]; shoeCount: { size: string; qty: number }[] };
 
-const FRIDAY_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
-const CHANDRAAT_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Chandraat Ginan", "Article of the Month", "Chandraat Tasbih", "Announcements", "Conclusion Dua"];
-const KUSHALI_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Kushali Standing Tasbih", "Ginan/Qasida", "Taliqah Ginan", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
+const FRIDAY_VAROS = ["1st Dua", "1st Dua Tasbih (Farsi)", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
+const CHANDRAAT_VAROS = ["1st Dua", "1st Dua Tasbih (Farsi)", "Standing Tasbih", "Ginan/Qasida", "Farman", "2nd Dua", "2nd Dua Tasbih", "Chandraat Ginan", "Article of the Month", "Chandraat Tasbih", "Announcements", "Conclusion Dua"];
+const KUSHALI_VAROS = ["1st Dua", "1st Dua Tasbih (Farsi)", "Kushali Standing Tasbih", "Ginan/Qasida", "Taliqah Ginan", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
 const EID_VAROS = ["Eid Namaz Reciter", "Eid Namaz Announcement/Gist"];
-const TALIQAH_VAROS = ["1st Dua", "1st Dua Tasbih Farsi", "Standing Tasbih", "Ginan/Qasida", "Taliqah Ginan", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
+const TALIQAH_VAROS = ["1st Dua", "1st Dua Tasbih (Farsi)", "Standing Tasbih", "Ginan/Qasida", "Taliqah Ginan", "Farman", "2nd Dua", "2nd Dua Tasbih", "Announcements", "Conclusion Dua"];
 
 const GATHERING_TYPES = [
   "Friday Vaaros",
@@ -46,6 +47,7 @@ export default function GatheringDetail() {
   const loadPhotos = useCallback(async () => {
     const res = await fetch(`/api/admin/gatherings/${id}/photos`);
     if (res.ok) setPhotos(await res.json());
+    else redirectIfUnauthorized(res);
   }, [id]);
 
   async function uploadPhoto(file: File) {
@@ -86,11 +88,14 @@ export default function GatheringDetail() {
   const loadGathering = useCallback(async () => {
     const res = await fetch(`/api/admin/gatherings/${id}`);
     if (res.ok) setG(await res.json());
+    else redirectIfUnauthorized(res);
   }, [id]);
 
   useEffect(() => {
     void loadGathering();
-    fetch("/api/admin/people").then(r => r.json()).then(setPeople);
+    fetch("/api/admin/people")
+      .then(r => { if (!r.ok) { redirectIfUnauthorized(r); return []; } return r.json(); })
+      .then(setPeople);
     void loadPhotos();
   }, [loadGathering, loadPhotos]);
 
