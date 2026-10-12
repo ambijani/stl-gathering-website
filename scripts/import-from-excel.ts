@@ -105,7 +105,8 @@ async function importPeople(wb: xlsx.WorkBook) {
     const key = normalizeName(name);
     const existed = personCache.has(key);
     await upsertPerson(name, { phone, interests });
-    existed ? updated++ : created++;
+    if (existed) updated++;
+    else created++;
   }
 
   console.log(`People: ${created} created, ${updated} updated, ${skipped} skipped (empty name)`);

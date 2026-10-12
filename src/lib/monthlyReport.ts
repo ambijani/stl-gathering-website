@@ -19,7 +19,7 @@ async function compressPhoto(data: Buffer, contentType: string): Promise<{ data:
   return { data: compressed, contentType: "image/jpeg" };
 }
 
-export function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]) {
+function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]) {
   const rows = gatherings.map(g => {
     const dateStr = new Date(g.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
     return `
