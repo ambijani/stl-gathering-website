@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import connect from "@/lib/mongo";
+import { clientIp, isRateLimited } from "@/lib/rateLimit";
 import Person from "@/models/Person";
 import { z } from "zod";
 
@@ -13,21 +14,8 @@ const schema = z.object({
   recaptchaToken: z.string().optional(),
 });
 
-/* ── Rate limiter (in-memory, per-IP) ── */
 const SUBMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const SUBMIT_MAX = 20;
-const submitAttempts = new Map<string, { count: number; windowStart: number }>();
-
-function isSubmitRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = submitAttempts.get(ip);
-  if (!entry || now - entry.windowStart > SUBMIT_WINDOW_MS) {
-    submitAttempts.set(ip, { count: 1, windowStart: now });
-    return false;
-  }
-  entry.count += 1;
-  return entry.count > SUBMIT_MAX;
-}
 
 /** Digits only, without a leading US country code, so formatting differences don't matter. */
 function normalizePhone(phone: string): string {
@@ -50,12 +38,14 @@ async function verifyRecaptcha(token: string): Promise<boolean> {
 
 export async function POST(req: Request) {
   try {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-      req.headers.get("x-real-ip") ??
-      "unknown";
-
-    if (isSubmitRateLimited(ip)) {
+    // Fails open: if the limiter can't reach the database, the signup goes through rather than being blocked.
+    let limited = false;
+    try {
+      limited = await isRateLimited("submit", clientIp(req), SUBMIT_MAX, SUBMIT_WINDOW_MS);
+    } catch (err) {
+      console.error("Submit rate limiter unavailable; allowing request:", err);
+    }
+    if (limited) {
       return new Response("Too Many Requests", {
         status: 429,
         headers: { "Retry-After": "900" },
