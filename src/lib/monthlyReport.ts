@@ -19,6 +19,12 @@ async function compressPhoto(data: Buffer, contentType: string): Promise<{ data:
   return { data: compressed, contentType: "image/jpeg" };
 }
 
+/** A photo re-encoded as JPEG needs a .jpg name, or mail clients may not open the attachment. */
+function attachmentName(filename: string, contentType: string): string {
+  if (contentType !== "image/jpeg" || /\.jpe?g$/i.test(filename)) return filename;
+  return filename.replace(/\.[^.]*$/, "") + ".jpg";
+}
+
 /** Gathering titles come from admin input; escape them before they go into the email HTML. */
 function escapeHtml(value: string): string {
   return value
@@ -125,7 +131,7 @@ export async function sendReport(month: number, year: number, extraRecipients: s
           return { data: p.data, contentType: p.contentType };
         });
         return {
-          filename: p.filename,
+          filename: attachmentName(p.filename, contentType),
           content: data,
           contentType,
           cid: p.cid,
