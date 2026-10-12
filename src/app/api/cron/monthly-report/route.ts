@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { sendReport } from "@/lib/monthlyReport";
+import { isValidMonthYear, lastMonth } from "@/lib/reportData";
 
 export async function GET(req: Request) {
   const authHeader    = req.headers.get("authorization");
@@ -17,12 +18,15 @@ export async function GET(req: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    const now   = new Date();
-    // Default: last month. Accept optional ?month=&year= overrides.
-    const month = searchParams.has("month") ? Number(searchParams.get("month")) : now.getMonth() - 1;
-    const year  = searchParams.has("year")  ? Number(searchParams.get("year"))  : now.getFullYear();
+  // Default: last month. Accept optional ?month=&year= overrides.
+  const fallback = lastMonth();
+  const month = searchParams.has("month") ? Number(searchParams.get("month")) : fallback.month;
+  const year  = searchParams.has("year")  ? Number(searchParams.get("year"))  : fallback.year;
+  if (!isValidMonthYear(month, year)) {
+    return Response.json({ error: "month must be 0-11 and year a four-digit number" }, { status: 400 });
+  }
 
+  try {
     const { monthLabel, count } = await sendReport(month, year);
     return Response.json({ ok: true, month: monthLabel, gatherings: count });
   } catch (error) {

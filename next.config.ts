@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const isDev = process.env.NODE_ENV !== "production";
+
 const nextConfig = {
   // sharp's native linux binary isn't picked up by Next's file tracing by default,
   // which breaks it at runtime on Vercel (routes that compress report photos).
@@ -15,7 +17,8 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://*.vercel-insights.com https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
+              // 'unsafe-eval' is only needed by the dev server (hot reloading), so production omits it.
+              `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}blob: https://*.vercel-insights.com https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://vercel.com https://www.google-analytics.com",
               "connect-src 'self' https://api.vercel.com https://*.vercel-insights.com https://vercel.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://www.google.com/recaptcha/",

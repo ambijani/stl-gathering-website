@@ -4,34 +4,15 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { createSessionToken, SESSION_MAX_AGE_SECONDS } from "@/lib/session";
+import { clientIp, isRateLimited } from "@/lib/rateLimit";
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const MAX_ATTEMPTS = 10;
 
-/** ip → { count, windowStart } */
-const attempts = new Map<string, { count: number; windowStart: number }>();
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = attempts.get(ip);
-
-  if (!entry || now - entry.windowStart > WINDOW_MS) {
-    attempts.set(ip, { count: 1, windowStart: now });
-    return false;
-  }
-
-  entry.count += 1;
-  return entry.count > MAX_ATTEMPTS;
-}
-
 export async function POST(req: Request) {
   try {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-      req.headers.get("x-real-ip") ??
-      "unknown";
-
-    if (isRateLimited(ip)) {
+    // Fails closed: if the limiter can't reach the database, the request throws and is refused below.
+    if (await isRateLimited("login", clientIp(req), MAX_ATTEMPTS, WINDOW_MS)) {
       return new Response("Too Many Requests", {
         status: 429,
         headers: { "Retry-After": "900" },
