@@ -7,7 +7,7 @@ import Photo from "@/models/Photo";
 import Gathering from "@/models/Gathering";
 import { ALLOWED_PHOTO_TYPES, MAX_PHOTO_UPLOAD_BYTES } from "@/lib/photoUpload";
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const authError = await requireAdmin();
   if (authError) return authError;
 

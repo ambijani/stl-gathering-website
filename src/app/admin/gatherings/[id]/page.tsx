@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { shrinkPhotoForUpload } from "@/lib/photoUpload";
 
-type Person = { _id: string; name: string; email?: string; interests?: string[] };
+type Person = { _id: string; name: string; interests?: string[] };
 type Varo = { _id: string; title: string; assignedPeople?: string[] };
 type Gathering = { _id: string; tags?: string[]; date: string; notes?: string; varos: Varo[]; shoeCount: { size: string; qty: number }[] };
 

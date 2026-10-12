@@ -43,7 +43,8 @@ export default function Signup() {
   function toggleInterest(val: string) {
     setSelected(prev => {
       const next = new Set(prev);
-      next.has(val) ? next.delete(val) : next.add(val);
+      if (next.has(val)) next.delete(val);
+      else next.add(val);
       return next;
     });
   }

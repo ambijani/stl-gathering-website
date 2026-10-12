@@ -2,7 +2,7 @@ import connect from "@/lib/mongo";
 import Gathering from "@/models/Gathering";
 import Photo from "@/models/Photo";
 
-export type ReportPhoto = {
+type ReportPhoto = {
   cid: string;
   contentType: string;
   data: Buffer;

@@ -5,7 +5,7 @@ import { requireAdmin, isValidObjectId } from "@/app/api/_auth";
 import connect from "@/lib/mongo";
 import Photo from "@/models/Photo";
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string; photoId: string }> }) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string; photoId: string }> }) {
   const authError = await requireAdmin();
   if (authError) return authError;
 
@@ -50,7 +50,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   return Response.json({ filename: photo.filename });
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string; photoId: string }> }) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string; photoId: string }> }) {
   const authError = await requireAdmin();
   if (authError) return authError;
 

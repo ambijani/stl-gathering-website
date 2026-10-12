@@ -283,7 +283,7 @@ export default function Analytics() {
             onChange={e => setExtraRecipients(e.target.value)}
           />
           <button
-            className="ismaili-btn text-sm shrink-0"
+            className="ismaili-button text-sm shrink-0"
             onClick={handleSendReport}
             disabled={sending || reportLoading}
           >

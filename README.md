@@ -10,7 +10,7 @@ Community gathering management platform for the STL Ismaili community. Tracks Va
 **Admin**
 - People management — add, edit, merge, and remove members
 - Gatherings — create events (Friday, Chandraat, Kushali, Eid, Taliqah), assign Varos per person, track shoe counts
-- Varo assignment via modal or matrix view
+- Varo assignment via a per-Varo modal, with recent assignment history
 - Analytics — average shoe count by month, shoe count per date, Varo frequency by person
 - HMAC-SHA256 session auth with rate-limited login
 
