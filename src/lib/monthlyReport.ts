@@ -19,12 +19,22 @@ async function compressPhoto(data: Buffer, contentType: string): Promise<{ data:
   return { data: compressed, contentType: "image/jpeg" };
 }
 
+/** Gathering titles come from admin input; escape them before they go into the email HTML. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]) {
   const rows = gatherings.map(g => {
     const dateStr = new Date(g.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
     return `
       <tr>
-        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;">${g.title || "Gathering"}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;">${escapeHtml(g.title || "Gathering")}</td>
         <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;">${dateStr}</td>
         <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:center;">${g.hasHappened ? g.totalShoes : "—"}</td>
       </tr>`;
@@ -43,11 +53,11 @@ function buildEmailHtml(monthLabel: string, gatherings: ReportGathering[]) {
       ${gatheringsWithPhotos.map(g => {
         const dateStr = new Date(g.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
         const imgTags = g.photos.map(p =>
-          `<img src="cid:${p.cid}" alt="${g.title || "Gathering"}" style="width:200px;height:150px;object-fit:cover;border-radius:6px;display:block;" />`
+          `<img src="cid:${p.cid}" alt="${escapeHtml(g.title || "Gathering")}" style="width:200px;height:150px;object-fit:cover;border-radius:6px;display:block;" />`
         ).join("");
         return `
         <div style="margin-bottom:20px;">
-          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#6b7280;">${g.title || "Gathering"} · ${dateStr}</p>
+          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#6b7280;">${escapeHtml(g.title || "Gathering")} · ${dateStr}</p>
           <div style="display:flex;flex-wrap:wrap;gap:8px;">${imgTags}</div>
         </div>`;
       }).join("")}
