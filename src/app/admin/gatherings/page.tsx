@@ -3,29 +3,21 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { redirectIfUnauthorized } from "@/lib/adminClient";
+import { GATHERING_TYPES } from "@/lib/gatheringTemplates";
 
 type Varo = { _id: string; title: string; capacity?: number; assignedPeople?: string[] };
 type Gathering = { _id: string; tags?: string[]; date: string; notes?: string; varos: Varo[]; shoeCount: { size: string; qty: number }[] };
 
-const GATHERING_TYPES = [
-  { value: "Friday Vaaros",    label: "Friday Vaaros",    bg: "bg-green-100",  text: "text-green-700"  },
-  { value: "Chandraat Vaaros", label: "Chandraat Vaaros", bg: "bg-purple-100", text: "text-purple-700" },
-  { value: "Kushali",          label: "Kushali",           bg: "bg-yellow-100", text: "text-yellow-700" },
-  { value: "Eid",              label: "Eid",               bg: "bg-blue-100",   text: "text-blue-700"   },
-  { value: "Taliqah",          label: "Taliqah",           bg: "bg-orange-100", text: "text-orange-700" },
-  { value: "Other",            label: "Other",             bg: "bg-gray-100",   text: "text-gray-600"   },
-];
-
 function typeBadges(tags?: string[]) {
   if (!tags?.length) {
-    const { label, bg, text } = GATHERING_TYPES[GATHERING_TYPES.length - 1];
-    return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${bg} ${text}`}>{label}</span>;
+    const { value, bg, text } = GATHERING_TYPES[GATHERING_TYPES.length - 1];
+    return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${bg} ${text}`}>{value}</span>;
   }
   return (
     <span className="flex flex-wrap gap-1">
       {tags.map(tag => {
         const match = GATHERING_TYPES.find(t => t.value === tag) ?? GATHERING_TYPES[GATHERING_TYPES.length - 1];
-        return <span key={tag} className={`text-xs px-2 py-0.5 rounded-full font-medium ${match.bg} ${match.text}`}>{match.label}</span>;
+        return <span key={tag} className={`text-xs px-2 py-0.5 rounded-full font-medium ${match.bg} ${match.text}`}>{match.value}</span>;
       })}
     </span>
   );
@@ -114,7 +106,7 @@ export default function GatheringsPage() {
                       checked={tags.includes(t.value)}
                       onChange={e => setTags(prev => e.target.checked ? [...prev, t.value] : prev.filter(v => v !== t.value))}
                     />
-                    {t.label}
+                    {t.value}
                   </label>
                 ))}
               </div>
