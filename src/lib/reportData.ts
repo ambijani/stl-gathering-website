@@ -23,6 +23,17 @@ export type ReportData = {
   gatherings: ReportGathering[];
 };
 
+/** The month before `now`. Built from a Date so January rolls back to December of the prior year. */
+export function lastMonth(now: Date = new Date()): { month: number; year: number } {
+  const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return { month: d.getMonth(), year: d.getFullYear() };
+}
+
+/** month is 0-based (0 = January), as in Date. Rejects NaN and out-of-range values. */
+export function isValidMonthYear(month: number, year: number): boolean {
+  return Number.isInteger(month) && month >= 0 && month <= 11 && Number.isInteger(year) && year >= 2000 && year <= 9999;
+}
+
 export async function fetchReportData(month: number, year: number): Promise<ReportData> {
   await connect();
 

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { redirectIfUnauthorized } from "@/lib/adminClient";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
   BarChart, Bar, ResponsiveContainer, Cell,
@@ -49,6 +50,11 @@ export default function Analytics() {
     setReportLoading(true);
     setSendStatus(null);
     const res  = await fetch(`/api/admin/report?month=${month}&year=${year}`);
+    if (!res.ok) {
+      if (!redirectIfUnauthorized(res)) setSendStatus({ ok: false, msg: "Could not load the report preview." });
+      setReportLoading(false);
+      return;
+    }
     const data = await res.json();
     setReportData(data);
     setReportLoading(false);
@@ -68,7 +74,8 @@ export default function Analytics() {
         extraRecipients: extraRecipients.split(",").map(e => e.trim()).filter(Boolean),
       }),
     });
-    const data = await res.json();
+    if (!res.ok && redirectIfUnauthorized(res)) return;
+    const data = await res.json().catch(() => ({})) as { monthLabel?: string; error?: string };
     setSendStatus(res.ok ? { ok: true, msg: `Report sent for ${data.monthLabel}` } : { ok: false, msg: data.error ?? "Failed to send" });
     setSending(false);
   }
@@ -76,6 +83,11 @@ export default function Analytics() {
   useEffect(() => {
     (async () => {
       const res  = await fetch("/api/admin/metrics/overview");
+      if (!res.ok) {
+        if (!redirectIfUnauthorized(res)) alert("Could not load analytics. Please refresh the page.");
+        setLoading(false);
+        return;
+      }
       const data: OverviewRes = await res.json();
       setPbd((data.pairsByDate ?? []).map(d => ({ date: String(d.date), pairs: Number(d.pairs ?? 0) })));
       setFreq(data.varoFrequency ?? []);

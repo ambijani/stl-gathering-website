@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { redirectIfUnauthorized } from "@/lib/adminClient";
 
 type Person = { _id: string; name: string; phone?: string; interests?: string[]; createdAt?: string };
 
@@ -18,6 +19,11 @@ export default function PeoplePage() {
 
   async function load() {
     const res = await fetch("/api/admin/people", { cache: "no-store" });
+    if (!res.ok) {
+      if (!redirectIfUnauthorized(res)) alert("Could not load people. Please refresh the page.");
+      setLoading(false);
+      return;
+    }
     setPeople(await res.json());
     setLoading(false);
   }

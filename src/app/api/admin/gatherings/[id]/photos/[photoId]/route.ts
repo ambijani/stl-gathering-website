@@ -5,16 +5,17 @@ import { requireAdmin, isValidObjectId } from "@/app/api/_auth";
 import connect from "@/lib/mongo";
 import Photo from "@/models/Photo";
 
+// Every query also matches gatheringId, so a photo can only be reached through its own gathering.
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string; photoId: string }> }) {
   const authError = await requireAdmin();
   if (authError) return authError;
 
-  const { photoId } = await params;
-  if (!isValidObjectId(photoId)) return new Response("Invalid ID", { status: 400 });
+  const { id, photoId } = await params;
+  if (!isValidObjectId(id) || !isValidObjectId(photoId)) return new Response("Invalid ID", { status: 400 });
   await connect();
 
   try {
-    const photo = await Photo.findById(photoId).select("data contentType filename");
+    const photo = await Photo.findOne({ _id: photoId, gatheringId: id }).select("data contentType filename");
     if (!photo) return new Response("Not found", { status: 404 });
 
     const buf = Buffer.isBuffer(photo.data)
@@ -38,13 +39,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const authError = await requireAdmin();
   if (authError) return authError;
 
-  const { photoId } = await params;
-  if (!isValidObjectId(photoId)) return new Response("Invalid ID", { status: 400 });
+  const { id, photoId } = await params;
+  if (!isValidObjectId(id) || !isValidObjectId(photoId)) return new Response("Invalid ID", { status: 400 });
   const { filename } = await req.json() as { filename?: string };
   if (!filename?.trim()) return Response.json({ error: "Filename required" }, { status: 400 });
 
   await connect();
-  const photo = await Photo.findByIdAndUpdate(photoId, { filename: filename.trim() }, { new: true }).select("filename");
+  const photo = await Photo.findOneAndUpdate(
+    { _id: photoId, gatheringId: id },
+    { filename: filename.trim() },
+    { new: true }
+  ).select("filename");
   if (!photo) return new Response("Not found", { status: 404 });
 
   return Response.json({ filename: photo.filename });
@@ -54,10 +59,11 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const authError = await requireAdmin();
   if (authError) return authError;
 
-  const { photoId } = await params;
-  if (!isValidObjectId(photoId)) return new Response("Invalid ID", { status: 400 });
+  const { id, photoId } = await params;
+  if (!isValidObjectId(id) || !isValidObjectId(photoId)) return new Response("Invalid ID", { status: 400 });
   await connect();
 
-  await Photo.findByIdAndDelete(photoId);
+  const deleted = await Photo.findOneAndDelete({ _id: photoId, gatheringId: id });
+  if (!deleted) return new Response("Not found", { status: 404 });
   return new Response(null, { status: 204 });
 }
