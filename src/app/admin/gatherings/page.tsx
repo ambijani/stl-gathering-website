@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { redirectIfUnauthorized } from "@/lib/adminClient";
 import { GATHERING_TYPES } from "@/lib/gatheringTemplates";
@@ -31,8 +31,36 @@ export default function GatheringsPage() {
 
   const [tags, setTags] = useState<string[]>(["Friday Vaaros"]);
   const [typeDropOpen, setTypeDropOpen] = useState(false);
-  const [date, setDate] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
+
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [viewMonth, setViewMonth] = useState(() => {
+    const n = new Date();
+    return new Date(n.getFullYear(), n.getMonth(), 1);
+  });
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [creating, setCreating] = useState(false);
+
+  const calendarCells = useMemo(() => {
+    const year = viewMonth.getFullYear();
+    const month = viewMonth.getMonth();
+    const firstWeekday = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const cells: ({ key: string; day: number } | null)[] = [];
+    for (let i = 0; i < firstWeekday; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) {
+      cells.push({ key: `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`, day: d });
+    }
+    return cells;
+  }, [viewMonth]);
+
+  function shiftMonth(delta: number) {
+    setViewMonth(v => new Date(v.getFullYear(), v.getMonth() + delta, 1));
+  }
+
+  function toggleDate(key: string) {
+    setSelectedDates(prev => (prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key].sort()));
+  }
 
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [deleteInput, setDeleteInput] = useState("");
@@ -66,15 +94,28 @@ export default function GatheringsPage() {
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!date) { alert("Pick a date"); return; }
-    const localDate = new Date(date + "T12:00:00");
-    const res = await fetch("/api/admin/gatherings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tags, date: localDate.toISOString(), notes }),
-    });
-    if (!res.ok) { alert(`Failed to create: ${await res.text()}`); return; }
-    setDate(""); setNotes(""); setTags(["Friday Vaaros"]); await load();
+    if (selectedDates.length === 0) { alert("Pick at least one date"); return; }
+    setCreating(true);
+    const failed: string[] = [];
+    for (const key of selectedDates) {
+      const localDate = new Date(key + "T12:00:00");
+      const res = await fetch("/api/admin/gatherings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tags, date: localDate.toISOString(), notes }),
+      });
+      if (!res.ok) failed.push(key);
+    }
+    setCreating(false);
+    if (failed.length) {
+      alert(`Failed to create gatherings for: ${failed.join(", ")}`);
+      setSelectedDates(failed);
+    } else {
+      setSelectedDates([]);
+      setNotes("");
+      setTags(["Friday Vaaros"]);
+    }
+    await load();
   }
 
   return (
@@ -112,9 +153,65 @@ export default function GatheringsPage() {
               </div>
             )}
           </div>
-          <input className="ismaili-input text-sm" type="date" value={date} onChange={e => setDate(e.target.value)} required />
+          <div className="relative">
+            {calendarOpen && <div className="fixed inset-0 z-10" onClick={() => setCalendarOpen(false)} />}
+            <button
+              type="button"
+              onClick={() => setCalendarOpen(o => !o)}
+              className="ismaili-input text-sm flex items-center gap-2 w-full sm:min-w-44"
+            >
+              <span className="flex-1 text-left">
+                {selectedDates.length === 0 ? "Pick dates…" : `${selectedDates.length} date${selectedDates.length > 1 ? "s" : ""} selected`}
+              </span>
+              <span className="text-gray-400">▾</span>
+            </button>
+            {calendarOpen && (
+              <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20 w-72">
+                <div className="flex items-center justify-between mb-2">
+                  <button type="button" onClick={() => shiftMonth(-1)} className="px-2 py-1 text-gray-500 hover:text-gray-900">‹</button>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {viewMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                  </span>
+                  <button type="button" onClick={() => shiftMonth(1)} className="px-2 py-1 text-gray-500 hover:text-gray-900">›</button>
+                </div>
+                <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-400 mb-1">
+                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(d => <div key={d}>{d}</div>)}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarCells.map((cell, i) =>
+                    cell ? (
+                      <button
+                        key={cell.key}
+                        type="button"
+                        onClick={() => toggleDate(cell.key)}
+                        className={`text-xs rounded-md py-1.5 ${
+                          selectedDates.includes(cell.key)
+                            ? "bg-green-800 text-white font-semibold"
+                            : "hover:bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {cell.day}
+                      </button>
+                    ) : (
+                      <div key={i} />
+                    )
+                  )}
+                </div>
+                {selectedDates.length > 0 && (
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                    <span className="text-xs text-gray-500">{selectedDates.length} selected</span>
+                    <button type="button" onClick={() => setSelectedDates([])} className="text-xs text-gray-400 hover:text-red-600">
+                      Clear
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <input className="ismaili-input text-sm w-full sm:w-52" placeholder="Notes (optional)" value={notes} onChange={e => setNotes(e.target.value)} />
-          <button className="ismaili-button text-sm py-2.5 px-5">+ Create</button>
+          <button className="ismaili-button text-sm py-2.5 px-5 disabled:opacity-50" disabled={creating}>
+            {creating ? "Creating…" : "+ Create"}
+          </button>
         </form>
       </div>
 
