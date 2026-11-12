@@ -2,6 +2,12 @@
 
 Community gathering management platform for the STL Ismaili community. Tracks Varo assignments, shoe counts, and member signups across Friday and Chandraat gatherings.
 
+## Why This Exists
+
+Before this, Varo assignments, shoe counts, and member signups were tracked by hand in spreadsheets and WhatsApp messages — easy to lose track of who'd already served a Varo, hard to spot patterns, and tedious to keep up to date. This app replaces that manual process with one place to record gatherings as they happen and look back on history (who's assigned, how often, attendance trends) without digging through old sheets.
+
+It's purpose-built for how this specific community runs its gatherings (its Varo rotation, its event types, its admins), not a general-purpose tool meant for others to adopt. This README exists so anyone picking up the code — maintaining it, or just trying to understand a decision in it — knows what problem it's solving and why it's shaped the way it is, not as a guide for recreating it elsewhere.
+
 ## Features
 
 **Public**
@@ -21,46 +27,3 @@ Community gathering management platform for the STL Ismaili community. Tracks Va
 - **Styling**: Tailwind CSS v4
 - **Auth**: HMAC-SHA256 signed session tokens (Web Crypto API)
 - **Deployment**: Vercel
-
-## Environment Variables
-
-```
-MONGODB_URI=your_mongodb_connection_string
-SESSION_SECRET=your_secret_key
-ADMIN_PASSWORD=your_admin_password
-```
-
-## Getting Started
-
-```bash
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-To develop against a copy of production data instead of production itself, point `MONGODB_URI` in `.env.local` at the `stl-gathering-dev` database (same cluster, different name), then copy production into it:
-
-```bash
-npm run db:sync-dev
-```
-
-This wipes and recopies the dev database; re-run it whenever you want fresh data.
-
-Once `.env.local` points at the dev database, `npm run local` (re)starts the site on localhost, stopping any server already on port 3000. It refuses to start if `.env.local` points at a non-dev database. Use `npm run local -- --fresh-data` to recopy production data first. Note that `vercel env pull` overwrites `.env.local` with the production values.
-
-## Data Import
-
-To import from a Google Sheets export (`data.xlsx`):
-
-```bash
-npx tsx scripts/import-from-excel.ts
-```
-
-The spreadsheet should have sheets: `Varo Form Responses`, `Schedule`, `Shoe Count`.
-
-After re-importing, run the cleanup script to remove any orphaned combined-name records:
-
-```bash
-npx tsx scripts/cleanup-combined-names.ts
-```

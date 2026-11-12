@@ -43,3 +43,6 @@ next-env.d.ts
 # data
 data.xlsx
 .env*.local
+
+# internal-only notes, not for the public repo
+HANDOFF.md
