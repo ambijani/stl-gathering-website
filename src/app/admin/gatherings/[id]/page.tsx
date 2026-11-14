@@ -195,6 +195,15 @@ export default function GatheringDetail() {
     setAddingLoading(false);
   }
 
+  async function dismissRequest(varoId: string, personId: string) {
+    const res = await fetch(`/api/admin/gatherings/${id}/varos/${varoId}/requests`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ personId }),
+    });
+    if (res.ok) await loadGathering(); else alert("Failed to dismiss request");
+  }
+
   async function saveAssignment() {
     if (!assignOpenFor) return;
     const personIds = Object.entries(selected).filter(([, v]) => v).map(([k]) => k);
@@ -447,6 +456,13 @@ export default function GatheringDetail() {
                     <div key={i} className="flex items-baseline gap-2 text-xs">
                       <span className="text-gray-700">{personName(r.personId)}</span>
                       <span className="text-gray-400">— requested {formatRelativeTime(r.requestedAt)}</span>
+                      <button
+                        onClick={() => dismissRequest(currentVaro._id, r.personId)}
+                        className="text-gray-400 hover:text-red-600 transition-colors"
+                        aria-label={`Dismiss ${personName(r.personId)}'s request`}
+                      >
+                        Dismiss
+                      </button>
                     </div>
                   ))}
                 </div>
