@@ -5,6 +5,7 @@ import { requireAdmin } from "@/app/api/_auth";
 import connect from "@/lib/mongo";
 import Person from "@/models/Person";
 import Gathering from "@/models/Gathering";
+import { computeWindowStats, EXCLUDED_VARO_TITLES } from "@/lib/varoDiversity";
 
 export async function GET() {
   try {
@@ -99,6 +100,7 @@ export async function GET() {
     ]);
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const now = new Date();
 
     const inactiveMembers = await Person.aggregate([
       {
@@ -106,6 +108,7 @@ export async function GET() {
           from: "gatherings",
           let: { personId: "$_id" },
           pipeline: [
+            { $match: { date: { $lte: now } } },
             { $unwind: "$varos" },
             { $match: { $expr: { $in: ["$$personId", "$varos.assignedPeople"] } } },
             { $group: { _id: null, lastDate: { $max: "$date" } } },
@@ -131,7 +134,44 @@ export async function GET() {
       { $sort: { lastVaro: 1 } },
     ]);
 
-    return Response.json({ signupsByInterest, pairsByDate, varoFill, varoFrequency, shoeCountByMonth, inactiveMembers });
+    const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+    const excludedTitles = [...EXCLUDED_VARO_TITLES];
+
+    const distinctTitles = await Gathering.aggregate([
+      { $match: { date: { $lte: now } } },
+      { $unwind: "$varos" },
+      { $match: { "varos.title": { $nin: excludedTitles } } },
+      { $group: { _id: "$varos.title" } },
+    ]);
+    const distinctTitleCount = distinctTitles.length;
+
+    const personVaroHistory = await Gathering.aggregate([
+      { $match: { date: { $lte: now } } },
+      { $unwind: "$varos" },
+      { $match: { "varos.title": { $nin: excludedTitles } } },
+      { $unwind: "$varos.assignedPeople" },
+      { $project: { personId: "$varos.assignedPeople", title: "$varos.title", date: "$date" } },
+      { $group: { _id: "$personId", assignments: { $push: { title: "$title", date: "$date" } } } },
+    ]);
+
+    const diversityPeople = await Person.find(
+      { _id: { $in: personVaroHistory.map(h => h._id) } },
+      { name: 1 }
+    );
+    const nameById = new Map(diversityPeople.map(p => [p._id.toString(), p.name]));
+
+    const varoDiversity = personVaroHistory.map(h => {
+      const assignments = h.assignments as { title: string; date: Date }[];
+      const recentAssignments = assignments.filter(a => a.date >= sixMonthsAgo);
+      return {
+        _id: h._id.toString(),
+        name: nameById.get(h._id.toString()) ?? "Unknown",
+        lifetime: computeWindowStats(assignments, distinctTitleCount),
+        recent: computeWindowStats(recentAssignments, distinctTitleCount),
+      };
+    });
+
+    return Response.json({ signupsByInterest, pairsByDate, varoFill, varoFrequency, shoeCountByMonth, inactiveMembers, varoDiversity });
   } catch (error) {
     console.error("Analytics API error:", error);
     return Response.json(
