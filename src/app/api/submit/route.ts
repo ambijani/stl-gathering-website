@@ -4,6 +4,8 @@ export const dynamic = "force-dynamic";
 import connect from "@/lib/mongo";
 import { clientIp, isRateLimited } from "@/lib/rateLimit";
 import Person from "@/models/Person";
+import { normalizePhone, buildExactNameRegex } from "@/lib/personMatching";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 import { z } from "zod";
 
 const schema = z.object({
@@ -16,25 +18,6 @@ const schema = z.object({
 
 const SUBMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const SUBMIT_MAX = 20;
-
-/** Digits only, without a leading US country code, so formatting differences don't matter. */
-function normalizePhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  return digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
-}
-
-async function verifyRecaptcha(token: string): Promise<boolean> {
-  const secret = process.env.RECAPTCHA_SECRET_KEY;
-  if (!secret) return true; // skip verification if not configured
-
-  const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ secret, response: token }),
-  });
-  const data = await res.json() as { success: boolean; score: number; action: string };
-  return data.success && data.action === "submit" && data.score >= 0.5;
-}
 
 export async function POST(req: Request) {
   try {
@@ -69,7 +52,7 @@ export async function POST(req: Request) {
       if (!recaptchaToken) {
         return Response.json({ error: "reCAPTCHA token is required" }, { status: 400 });
       }
-      const valid = await verifyRecaptcha(recaptchaToken);
+      const valid = await verifyRecaptcha(recaptchaToken, "submit");
       if (!valid) return Response.json({ error: "Bot protection check failed. Please try again." }, { status: 403 });
     }
 
@@ -77,7 +60,7 @@ export async function POST(req: Request) {
     // aren't blocked, since a name alone can't tell namesakes apart; admins can merge real duplicates.
     const phone = normalizePhone(data.phone ?? "");
     if (phone) {
-      const nameRegex = new RegExp(`^${data.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+      const nameRegex = buildExactNameRegex(data.name);
       const sameName = await Person.find({ name: { $regex: nameRegex } }).select("phone").lean<{ phone?: string }[]>();
       if (sameName.some(p => normalizePhone(p.phone ?? "") === phone)) {
         return Response.json(
