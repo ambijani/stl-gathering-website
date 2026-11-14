@@ -46,6 +46,7 @@ function AdminNav() {
         {navLink("/admin/people", "People")}
         {navLink("/admin/gatherings", "Gatherings")}
         {navLink("/admin/analytics", "Analytics")}
+        {navLink("/admin/requests", "Requests")}
         <button onClick={logout} className={`hidden sm:inline-flex sm:ml-auto ${logoutCls}`}>Logout</button>
       </div>
     </nav>

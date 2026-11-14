@@ -38,11 +38,15 @@ export async function DELETE(_req: NextRequest, context: { params: Promise<{ id:
   const doc = await Person.findByIdAndDelete(id).lean();
   if (!doc) return new Response("Not found", { status: 404 });
 
-  // Remove them from every Varo so no dangling IDs are left behind
+  // Remove them from every Varo's assignments and requests so no dangling IDs are left behind
   const oid = new mongoose.Types.ObjectId(id);
   await Gathering.updateMany(
     { "varos.assignedPeople": oid },
     { $pull: { "varos.$[].assignedPeople": oid } }
+  );
+  await Gathering.updateMany(
+    { "varos.requests.personId": oid },
+    { $pull: { "varos.$[].requests": { personId: oid } } }
   );
   return Response.json({ ok: true });
 }

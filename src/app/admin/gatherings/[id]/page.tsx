@@ -8,8 +8,20 @@ import {
 } from "@/lib/gatheringTemplates";
 
 type Person = { _id: string; name: string; interests?: string[] };
-type Varo = { _id: string; title: string; assignedPeople?: string[] };
+type VaroRequest = { personId: string; requestedAt: string };
+type Varo = { _id: string; title: string; assignedPeople?: string[]; requests?: VaroRequest[] };
 type Gathering = { _id: string; tags?: string[]; date: string; notes?: string; varos: Varo[]; shoeCount: { size: string; qty: number }[] };
+
+function formatRelativeTime(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diffMs / (60 * 1000));
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
 
 const TEMPLATES: { label: string; varos: string[]; border: string; text: string; hover: string }[] = [
   { label: "Friday Vaaros",    varos: FRIDAY_VAROS,    border: "border-green-300",  text: "text-green-700",  hover: "hover:bg-green-50"  },
@@ -423,6 +435,21 @@ export default function GatheringDetail() {
                     })}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Requested by */}
+            {(currentVaro.requests ?? []).length > 0 && (
+              <div className="px-4 pt-3 pb-2 border-b">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Requested by</p>
+                <div className="space-y-1">
+                  {(currentVaro.requests ?? []).map((r, i) => (
+                    <div key={i} className="flex items-baseline gap-2 text-xs">
+                      <span className="text-gray-700">{personName(r.personId)}</span>
+                      <span className="text-gray-400">— requested {formatRelativeTime(r.requestedAt)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
