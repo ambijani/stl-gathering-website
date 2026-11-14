@@ -6,7 +6,11 @@ const VaroSchema = new Schema(
     description: String,
     varoDate: Date,
     capacity: Number,
-    assignedPeople: [{ type: Schema.Types.ObjectId, ref: "Person" }]
+    assignedPeople: [{ type: Schema.Types.ObjectId, ref: "Person" }],
+    requests: [{
+      personId: { type: Schema.Types.ObjectId, ref: "Person" },
+      requestedAt: Date,
+    }]
   },
   { _id: true }
 );
