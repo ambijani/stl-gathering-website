@@ -33,8 +33,10 @@ export async function POST(req: NextRequest) {
   if (!from) return new Response("fromId not found", { status: 404 });
   if (!to)   return new Response("toId not found",   { status: 404 });
 
-  // Find every gathering that has fromId in any varo's assignedPeople
-  const gatherings = await Gathering.find({ "varos.assignedPeople": fromOid });
+  // Find every gathering that has fromId in any varo's assignedPeople or requests
+  const gatherings = await Gathering.find({
+    $or: [{ "varos.assignedPeople": fromOid }, { "varos.requests.personId": fromOid }],
+  });
 
   let varosUpdated = 0;
 
@@ -43,18 +45,29 @@ export async function POST(req: NextRequest) {
     for (const varo of g.varos) {
       const ids = (varo.assignedPeople as mongoose.Types.ObjectId[]);
       const hasFrom = ids.some(id => id.equals(fromOid));
-      if (!hasFrom) continue;
-
-      const hasTo   = ids.some(id => id.equals(toOid));
-      if (hasTo) {
-        // Both present — just remove the fromId (dedup)
-        varo.assignedPeople = ids.filter(id => !id.equals(fromOid)) as typeof varo.assignedPeople;
-      } else {
-        // Replace fromId with toId
-        varo.assignedPeople = ids.map(id => id.equals(fromOid) ? toOid : id) as typeof varo.assignedPeople;
+      if (hasFrom) {
+        const hasTo = ids.some(id => id.equals(toOid));
+        if (hasTo) {
+          // Both present — just remove the fromId (dedup)
+          varo.assignedPeople = ids.filter(id => !id.equals(fromOid)) as typeof varo.assignedPeople;
+        } else {
+          // Replace fromId with toId
+          varo.assignedPeople = ids.map(id => id.equals(fromOid) ? toOid : id) as typeof varo.assignedPeople;
+        }
+        changed = true;
+        varosUpdated++;
       }
-      changed = true;
-      varosUpdated++;
+
+      const requests = (varo.requests as { personId: mongoose.Types.ObjectId; requestedAt: Date }[] | undefined) ?? [];
+      const hasFromRequest = requests.some(r => r.personId?.equals(fromOid));
+      if (hasFromRequest) {
+        const hasToRequest = requests.some(r => r.personId?.equals(toOid));
+        varo.requests = (hasToRequest
+          ? requests.filter(r => !r.personId?.equals(fromOid))
+          : requests.map(r => (r.personId?.equals(fromOid) ? { personId: toOid, requestedAt: r.requestedAt } : { personId: r.personId, requestedAt: r.requestedAt }))
+        ) as typeof varo.requests;
+        changed = true;
+      }
     }
     if (changed) await g.save();
   }

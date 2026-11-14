@@ -13,7 +13,7 @@ export async function GET() {
   await connect();
 
   const gatherings = await Gathering.find({ "varos.requests.0": { $exists: true } })
-    .lean<{ _id: object; title?: string; date: Date; varos: { title: string; assignedPeople?: object[]; requests?: { personId: object; requestedAt: Date }[] }[] }[]>();
+    .lean<{ _id: object; title?: string; tags?: string[]; date: Date; varos: { title: string; assignedPeople?: object[]; requests?: { personId: object; requestedAt: Date }[] }[] }[]>();
 
   const personIds = new Set<string>();
   for (const g of gatherings) {
@@ -34,7 +34,7 @@ export async function GET() {
         requests.push({
           personName: nameById.get(personId) ?? "Unknown",
           gatheringId: g._id.toString(),
-          gatheringTitle: g.title ?? "",
+          gatheringTitle: (Array.isArray(g.tags) ? g.tags : (g.title ? [g.title] : [])).join(", "),
           gatheringDate: g.date.toISOString(),
           varoTitle: v.title,
           requestedAt: r.requestedAt.toISOString(),

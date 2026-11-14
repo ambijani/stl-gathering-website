@@ -31,13 +31,13 @@ export async function GET() {
 
     const gatherings = await Gathering.find({ date: { $gte: start, $lte: end } })
       .sort({ date: 1 })
-      .lean<{ _id: object; title?: string; date: Date; varos: { _id: object; title: string; requests?: unknown[] }[] }[]>();
+      .lean<{ _id: object; title?: string; tags?: string[]; date: Date; varos: { _id: object; title: string; requests?: unknown[] }[] }[]>();
 
     const result = gatherings
       .filter(g => g.varos.length > 0)
       .map(g => ({
         _id: g._id.toString(),
-        title: g.title,
+        title: (Array.isArray(g.tags) ? g.tags : (g.title ? [g.title] : [])).join(", "),
         date: g.date.toISOString(),
         varos: g.varos.map(v => ({
           _id: v._id.toString(),
@@ -106,6 +106,9 @@ export async function POST(req: Request) {
     }
 
     const phoneNormalized = normalizePhone(phone);
+    if (phoneNormalized.length < 10) {
+      return Response.json({ error: "A valid phone number is required." }, { status: 400 });
+    }
     const nameRegex = buildExactNameRegex(name);
     const sameName = await Person.find({ name: { $regex: nameRegex } }).select("phone");
     let person = sameName.find(p => normalizePhone(p.phone ?? "") === phoneNormalized);
