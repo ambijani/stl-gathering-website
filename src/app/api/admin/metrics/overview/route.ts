@@ -148,7 +148,6 @@ export async function GET() {
     const personVaroHistory = await Gathering.aggregate([
       { $match: { date: { $lte: now } } },
       { $unwind: "$varos" },
-      { $match: { "varos.title": { $nin: excludedTitles } } },
       { $unwind: "$varos.assignedPeople" },
       { $project: { personId: "$varos.assignedPeople", title: "$varos.title", date: "$date" } },
       { $group: { _id: "$personId", assignments: { $push: { title: "$title", date: "$date" } } } },

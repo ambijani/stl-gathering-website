@@ -298,11 +298,11 @@ export default function Analytics() {
           />
         </div>
         <p className="text-sm text-gray-500 mb-3">
-          Varo Diversity shows how spread out someone&apos;s Varo assignments have been — from 0 (always the same duty) to 100 (an even mix across all duty types).
+          Varo Diversity shows how spread out someone&apos;s Varo assignments have been, across their whole history and over the last 6 months — from 0 (always the same duty) to 100 (an even mix across all duty types).
           Eid and Taliqah Ginan assignments aren&apos;t counted. A score needs at least 3 assignments in that time window; fewer shows as &quot;Not enough data&quot;.
           Someone who only attends Friday gatherings can&apos;t reach as high a score as someone who attends everything — that reflects which events they&apos;re at, not how fairly they&apos;re rotated.
         </p>
-        <div className="ismaili-card overflow-hidden max-h-96 overflow-y-auto">
+        <div className="ismaili-card overflow-auto max-h-96">
           <table className="admin-table">
             <thead>
               <tr>
@@ -310,16 +310,16 @@ export default function Analytics() {
                 <th>Lifetime Total</th>
                 <th>Lifetime Score</th>
                 <th>Lifetime Top Varo</th>
-                <th>Recent Total</th>
+                <th>6-mo Total</th>
                 <th>
                   <button
                     onClick={() => setDiversityAsc(a => !a)}
                     className="flex items-center gap-1 hover:text-gray-800 transition-colors"
                   >
-                    Recent Score {diversityAsc ? "↑" : "↓"}
+                    6-mo Score {diversityAsc ? "↑" : "↓"}
                   </button>
                 </th>
-                <th>Recent Top Varo</th>
+                <th>6-mo Top Varo</th>
               </tr>
             </thead>
             <tbody>
