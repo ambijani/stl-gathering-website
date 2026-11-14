@@ -10,6 +10,10 @@ type PairsByDate      = { date: string; pairs: number };
 type VaroFrequency    = { name: string; count: number };
 type ShoeCountByMonth = { month: string; avg: number };
 type InactiveMember   = { _id: string; name: string; lastVaro: string | null };
+type DiversityWindowStats =
+  | { total: number; score: number; topVaro: string; topVaroPct: number }
+  | { total: number; notEnoughData: true };
+type VaroDiversityMember = { _id: string; name: string; lifetime: DiversityWindowStats; recent: DiversityWindowStats };
 type ReportGathering  = { title: string; date: string; totalShoes: number; hasHappened: boolean; shoeBreakdown: { size: string; qty: number }[] };
 type ReportData       = { monthLabel: string; gatherings: ReportGathering[] };
 type OverviewRes = {
@@ -17,6 +21,7 @@ type OverviewRes = {
   varoFrequency:    VaroFrequency[];
   shoeCountByMonth: ShoeCountByMonth[];
   inactiveMembers:  InactiveMember[];
+  varoDiversity:    VaroDiversityMember[];
 };
 
 const COLORS = ["#4f46e5","#7c3aed","#db2777","#ea580c","#16a34a","#0891b2","#ca8a04"];
@@ -25,14 +30,30 @@ function fmtDate(v: unknown) {
   return new Date(String(v)).toLocaleDateString("en-US", { timeZone: "UTC" });
 }
 
+function renderScoreCell(w: DiversityWindowStats) {
+  if ("notEnoughData" in w) {
+    return <span className="text-gray-400 text-xs italic">Not enough data</span>;
+  }
+  const colorClass = w.score < 40 ? "text-red-600" : w.score <= 70 ? "text-amber-600" : "";
+  return <span className={`font-semibold text-xs ${colorClass}`}>{w.score}</span>;
+}
+
+function renderTopVaroCell(w: DiversityWindowStats) {
+  if ("notEnoughData" in w) return "—";
+  return `${w.topVaro} ${w.topVaroPct}%`;
+}
+
 export default function Analytics() {
   const [loading,   setLoading]   = useState(true);
   const [pbd,       setPbd]       = useState<PairsByDate[]>([]);
   const [freq,      setFreq]      = useState<VaroFrequency[]>([]);
   const [scm,       setScm]       = useState<ShoeCountByMonth[]>([]);
   const [inactive,  setInactive]  = useState<InactiveMember[]>([]);
+  const [diversity, setDiversity] = useState<VaroDiversityMember[]>([]);
   const [freqSearch,  setFreqSearch]  = useState("");
   const [inactiveAsc, setInactiveAsc] = useState(false);
+  const [diversitySearch, setDiversitySearch] = useState("");
+  const [diversityAsc,    setDiversityAsc]    = useState(true);
 
   // Report state
   const now = new Date();
@@ -93,6 +114,7 @@ export default function Analytics() {
       setFreq(data.varoFrequency ?? []);
       setScm(data.shoeCountByMonth ?? []);
       setInactive(data.inactiveMembers ?? []);
+      setDiversity(data.varoDiversity ?? []);
       setLoading(false);
     })();
   }, []);
@@ -260,6 +282,72 @@ export default function Analytics() {
               </div>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Varo Diversity */}
+      <section>
+        <div className="flex items-end justify-between flex-wrap gap-3 mb-1">
+          <h2 className="text-xl font-semibold">Varo Diversity</h2>
+          <input
+            aria-label="Search varo diversity by name"
+            className="ismaili-input text-sm w-full sm:w-56"
+            placeholder="Search name…"
+            value={diversitySearch}
+            onChange={e => setDiversitySearch(e.target.value)}
+          />
+        </div>
+        <p className="text-sm text-gray-500 mb-3">
+          Varo Diversity shows how spread out someone&apos;s Varo assignments have been — from 0 (always the same duty) to 100 (an even mix across all duty types).
+          Eid and Taliqah Ginan assignments aren&apos;t counted. A score needs at least 3 assignments in that time window; fewer shows as &quot;Not enough data&quot;.
+          Someone who only attends Friday gatherings can&apos;t reach as high a score as someone who attends everything — that reflects which events they&apos;re at, not how fairly they&apos;re rotated.
+        </p>
+        <div className="ismaili-card overflow-hidden max-h-96 overflow-y-auto">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Lifetime Total</th>
+                <th>Lifetime Score</th>
+                <th>Lifetime Top Varo</th>
+                <th>Recent Total</th>
+                <th>
+                  <button
+                    onClick={() => setDiversityAsc(a => !a)}
+                    className="flex items-center gap-1 hover:text-gray-800 transition-colors"
+                  >
+                    Recent Score {diversityAsc ? "↑" : "↓"}
+                  </button>
+                </th>
+                <th>Recent Top Varo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...diversity]
+                .filter(m => m.name.toLowerCase().includes(diversitySearch.trim().toLowerCase()))
+                .sort((a, b) => {
+                  const aNA = "notEnoughData" in a.recent;
+                  const bNA = "notEnoughData" in b.recent;
+                  if (aNA && bNA) return 0;
+                  if (aNA) return 1;
+                  if (bNA) return -1;
+                  const sa = (a.recent as { score: number }).score;
+                  const sb = (b.recent as { score: number }).score;
+                  return diversityAsc ? sa - sb : sb - sa;
+                })
+                .map(m => (
+                  <tr key={m._id}>
+                    <td className="font-medium text-xs">{m.name}</td>
+                    <td className="text-xs">{m.lifetime.total}</td>
+                    <td>{renderScoreCell(m.lifetime)}</td>
+                    <td className="text-xs">{renderTopVaroCell(m.lifetime)}</td>
+                    <td className="text-xs">{m.recent.total}</td>
+                    <td>{renderScoreCell(m.recent)}</td>
+                    <td className="text-xs">{renderTopVaroCell(m.recent)}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
