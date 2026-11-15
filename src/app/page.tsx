@@ -140,9 +140,6 @@ export default function Home() {
                               onChange={() => toggleSelection(g._id, v._id)}
                             />
                             <span className="text-sm flex-1">{v.title}</span>
-                            {v.requestCount > 0 && (
-                              <span className="text-xs text-gray-400">({v.requestCount} requested)</span>
-                            )}
                           </label>
                         ))}
                       </div>
