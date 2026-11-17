@@ -238,7 +238,7 @@ export default function Analytics() {
                 </span>
               </div>
               <p className="text-xs text-gray-400 mb-2">No Varo in 30+ days</p>
-              <div className="ismaili-card overflow-hidden max-h-72 overflow-y-auto">
+              <div className="ismaili-card max-h-72 overflow-auto">
                 <table className="admin-table">
                   <thead>
                     <tr>
